@@ -1,10 +1,14 @@
-#!/bin/python3
+# %%
+# !/bin/python3
 
 # Python simulation of a simple planar pendulum with real time animation
 # BH, OF, MP, AJ, TS 2020-10-20, latest version 2022-10-25.
 
+import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib import animation
-from pylab import *
+
+from abc import abstractmethod
 
 """
     This script defines all the classes needed to simulate (and animate) a single pendulum.
@@ -29,150 +33,180 @@ from pylab import *
                     run while also producing an animation: the latter option is slower
 """
 
-# Global constants
 G = 9.8  # gravitational acceleration
+pi = 3.14
+cos = np.cos
+sin = np.sin
 
+# %% Classes
 class Oscillator:
 
-    """ Class for a general, simple oscillator """
+    """Class for a general, simple oscillator"""
 
     def __init__(self, m=1, c=4, t0=0, theta0=0, dtheta0=0, gamma=0):
-        self.m = m              # mass of the pendulum bob
-        self.c = c              # c = g/L
-        self.L = G / c          # string length
-        self.t = t0             # the time
-        self.theta = theta0     # the position/angle
-        self.dtheta = dtheta0   # the velocity
-        self.gamma = gamma      # damping
+        self.m = m  # mass of the pendulum bob
+        self.c = c  # c = g/L
+        self.L = G / c  # string length
+        self.t = t0  # the time
+        self.theta = theta0  # the position/angle
+        self.dtheta = dtheta0  # the velocity
+        self.gamma = gamma  # damping
+
 
 class Observables:
 
-    """ Class for storing observables for an oscillator """
+    """Class for storing observables for an oscillator"""
 
     def __init__(self):
-        self.time = []          # list to store time
-        self.pos = []           # list to store positions
-        self.vel = []           # list to store velocities
-        self.energy = []        # list to store energy
+        self.time = []  # list to store time
+        self.pos = []  # list to store positions
+        self.vel = []  # list to store velocities
+        self.energy = []  # list to store energy
 
 
 class BaseSystem:
-    
+    @abstractmethod
     def force(self, osc):
-
-        """ Virtual method: implemented by the childc lasses  """
-
-        pass
+        """Virtual method: implemented by the child classes"""
+        return NotImplementedError
 
 
 class Harmonic(BaseSystem):
     def force(self, osc):
-        return - osc.m * ( osc.c*osc.theta + osc.gamma*osc.dtheta )
+        return -osc.m * (osc.c * osc.theta + osc.gamma * osc.dtheta)
 
 
 class Pendulum(BaseSystem):
     def force(self, osc):
-        return - osc.m * ( osc.c*np.sin(osc.theta) + osc.gamma*osc.dtheta )
+        return -osc.m * (osc.c * np.sin(osc.theta) + osc.gamma * osc.dtheta)
 
 
 class BaseIntegrator:
+    def __init__(self, _dt=0.01):
+        self.dt = _dt  # time step
 
-    def __init__(self, _dt=0.01) :
-        self.dt = _dt   # time step
+    @abstractmethod
+    def timestep(self, simsystem, osc, obs):
+        """Virtual method: implemented by the child classes"""
+        return NotImplementedError
 
     def integrate(self, simsystem, osc, obs):
-
-        """ Perform a single integration step """
-        
+        """Perform a single integration step"""
         self.timestep(simsystem, osc, obs)
 
+        print(f"t = {osc.t:.2f}, theta = {osc.theta:.2f}, dtheta = {osc.dtheta:.2f}")
         # Append observables to their lists
         obs.time.append(osc.t)
         obs.pos.append(osc.theta)
         obs.vel.append(osc.dtheta)
         # Function 'isinstance' is used to check if the instance of the system object is 'Harmonic' or 'Pendulum'
-        if isinstance(simsystem, Harmonic) :
+        if isinstance(simsystem, Harmonic):
             # Harmonic oscillator energy
-            obs.energy.append(0.5 * osc.m * osc.L ** 2 * osc.dtheta ** 2 + 0.5 * osc.m * G * osc.L * osc.theta ** 2)
-        else :
+            obs.energy.append(
+                0.5 * osc.m * osc.L**2 * osc.dtheta**2
+                + 0.5 * osc.m * G * osc.L * osc.theta**2
+            )
+        else:
             # Pendulum energy
-            # TODO: Append the total energy for the pendulum (use the correct formula!)
-            pass
+            obs.energy.append(
+                0.5 * osc.m * osc.L**2 * osc.dtheta**2
+                + osc.m * G * osc.L * (1 - cos(osc.theta))
+            )
 
-
-    def timestep(self, simsystem, osc, obs):
-
-        """ Virtual method: implemented by the child classes """
-        
-        pass
-
-
-# HERE YOU ARE ASKED TO IMPLEMENT THE NUMERICAL TIME-MARCHING SCHEMES:
 
 class EulerCromerIntegrator(BaseIntegrator):
     def timestep(self, simsystem, osc, obs):
-        accel = simsystem.force(osc) / osc.m
+        # accel = simsystem.force(osc) / osc.m
         osc.t += self.dt
-        # TODO: Implement the integration here, updating osc.theta and osc.dtheta
+        osc.dtheta -= osc.c * osc.theta * self.dt
+        osc.theta += osc.dtheta * self.dt
 
 
 class VerletIntegrator(BaseIntegrator):
     def timestep(self, simsystem, osc, obs):
         accel = simsystem.force(osc) / osc.m
         osc.t += self.dt
-        # TODO: Implement the integration here, updating osc.theta and osc.dtheta
+        accel_dt = simsystem.force(osc) / osc.m
+        osc.theta += osc.dtheta * self.dt + 0.5 * accel * self.dt**2
+        osc.dtheta += 0.5 * (accel_dt + accel) * self.dt
 
 
 class RK4Integrator(BaseIntegrator):
     def timestep(self, simsystem, osc, obs):
-        accel = simsystem.force(osc) / osc.m 
-        # osc.t += self.dt
-        # TODO: Implement the integration here, updating osc.theta and osc.dtheta
+        theta = osc.theta
+        dtheta = osc.dtheta
+
+        a_1 = simsystem.force(osc) / osc.m * self.dt
+        b_1 = osc.dtheta * self.dt
+
+        osc.t += self.dt / 2
+        osc.theta += b_1 / 2
+        osc.dtheta += a_1 / 2
+        a_2 = simsystem.force(osc) / osc.m * self.dt
+        b_2 = osc.dtheta * self.dt
+
+        osc.theta = theta + b_2 / 2
+        osc.dtheta = dtheta + a_2 / 2
+        a_3 = simsystem.force(osc) / osc.m * self.dt
+        b_3 = osc.dtheta * self.dt
+
+        osc.theta = theta + b_3
+        osc.dtheta = dtheta + a_3
+        a_4 = simsystem.force(osc) / osc.m * self.dt
+        b_4 = osc.dtheta * self.dt
+
+        osc.dtheta = dtheta + 1 / 6 * (a_1 + 2 * a_2 + 2 * a_3 + a_4)
+        osc.theta = theta + 1 / 6 * (b_1 + 2 * b_2 + 2 * b_3 + b_4)
 
 
 # Animation function which integrates a few steps and return a line for the pendulum
-def animate(framenr, simsystem, oscillator, obs, integrator, pendulum_line, stepsperframe):
-    
+def animate(
+    framenr, simsystem, oscillator, obs, integrator, pendulum_line, stepsperframe
+):
+
     for it in range(stepsperframe):
         integrator.integrate(simsystem, oscillator, obs)
 
     x = np.array([0, np.sin(oscillator.theta)])
     y = np.array([0, -np.cos(oscillator.theta)])
     pendulum_line.set_data(x, y)
-    return pendulum_line,
+    return pendulum_line
 
 
+# Simulation
 class Simulation:
-
-    def reset(self, osc=Oscillator()) :
+    def reset(self, osc=Oscillator()):
         self.oscillator = osc
         self.obs = Observables()
 
-    def __init__(self, osc=Oscillator()) :
+    def __init__(self, osc=Oscillator()):
         self.reset(osc)
 
     # Run without displaying any animation (fast)
-    def run(self,
-            simsystem,
-            integrator,
-            tmax=30.,               # final time
-            ):
+
+    def run(
+        self,
+        simsystem,
+        integrator,
+        tmax=30.0,  # final time
+    ):
 
         n = int(tmax / integrator.dt)
-
         for it in range(n):
             integrator.integrate(simsystem, self.oscillator, self.obs)
 
     # Run while displaying the animation of a pendulum swinging back and forth (slow-ish)
     # If too slow, try to increase stepsperframe
-    def run_animate(self,
-            simsystem,
-            integrator,
-            tmax=30.,               # final time
-            stepsperframe=1         # how many integration steps between visualising frames
-            ):
+    def run_animate(
+        self,
+        simsystem,
+        integrator,
+        tmax=30.0,  # final time
+        stepsperframe=1,  # how many integration steps between visualising frames
+        title='Animation'
+    ):
 
-        numframes = int(tmax / (stepsperframe * integrator.dt))-2
+        numframes = int(tmax / (stepsperframe * integrator.dt)) - 2
 
         # WARNING! If you experience problems visualizing the animation try to comment/uncomment this line
         plt.clf()
@@ -183,54 +217,74 @@ class Simulation:
         ax = plt.subplot(xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
         plt.axhline(y=0)  # draw a default hline at y=1 that spans the xrange
         plt.axvline(x=0)  # draw a default vline at x=1 that spans the yrange
-        pendulum_line, = ax.plot([], [], lw=5)
+        (pendulum_line,) = ax.plot([], [], lw=5)
         plt.title(title)
         # Call the animator, blit=True means only re-draw parts that have changed
-        anim = animation.FuncAnimation(plt.gcf(), animate,  # init_func=init,
-                                       fargs=[simsystem,self.oscillator,self.obs,integrator,pendulum_line,stepsperframe],
-                                       frames=numframes, interval=25, blit=True, repeat=False)
+        anim = animation.FuncAnimation(
+            plt.gcf(),
+            animate,  # init_func=init,
+            fargs=[
+                simsystem,
+                self.oscillator,
+                self.obs,
+                integrator,
+                pendulum_line,
+                stepsperframe,
+            ],
+            frames=numframes,
+            interval=25,
+            blit=False,
+            repeat=False,
+        )
 
         # If you experience problems visualizing the animation try to comment/uncomment this line
-        # plt.show()
+        plt.show()
 
         # If you experience problems visualizing the animation try to comment/uncomment this line
-        plt.waitforbuttonpress(10)
+        # plt.waitforbuttonpress(10)
 
     # Plot coordinates and energies (to be called after running)
     def plot_observables(self, title="simulation", ref_E=None):
 
         plt.clf()
         plt.title(title)
-        plt.plot(self.obs.time, self.obs.pos, 'b-', label="Position")
-        plt.plot(self.obs.time, self.obs.vel, 'r-', label="Velocity")
-        plt.plot(self.obs.time, self.obs.energy, 'g-', label="Energy")
-        if ref_E != None :
-            plt.plot([self.obs.time[0],self.obs.time[-1]] , [ref_E, ref_E], 'k--', label="Ref.")
-        plt.xlabel('time')
-        plt.ylabel('observables')
+        plt.plot(self.obs.time, self.obs.pos, "b-", label="Position")
+        plt.plot(self.obs.time, self.obs.vel, "r-", label="Velocity")
+        plt.plot(self.obs.time, self.obs.energy, "g-", label="Energy")
+        if ref_E != None:
+            plt.plot(
+                [self.obs.time[0], self.obs.time[-1]],
+                [ref_E, ref_E],
+                "k--",
+                label="Ref.",
+            )
+
+        plt.xlabel("time")
+        plt.ylabel("observables")
         plt.legend()
-        plt.savefig(title + ".pdf")
+        plt.savefig(title + ".png")
         plt.show()
 
 
-# It's good practice to encapsulate the script execution in 
-# a function (e.g. for profiling reasons)
-def exercise_11() :
-    # TODO
-    pass
+# %% Exercise 1.1
+def exercise_11():
+    # Compare the different methods, Euler-Cromer, velocity Verlet and Runge-Kutta, with each other and with the exact solution of the harmonic oscillator
+    mass = 1
+    c = 2**2
+    time_0 = 0
+    theta_0 = 0.1 * pi
+    dtheta_0 = 0
+    gamma = 0
+    integrator = EulerCromerIntegrator()
+    tmax = 30
+    stepsperframe = 10
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(osc, integrator, tmax)
+    sim.run_animate(osc, integrator, tmax, stepsperframe=stepsperframe)
+    sim.plot_observables("simulation1")
 
 
-"""
-    This directive instructs Python to run what comes after ' if __name__ == "__main__" : '
-    if the script pendulum_template.py is executed 
-    (e.g. by running "python3 pendulum_template.py" in your favourite terminal).
-    Otherwise, if pendulum_template.py is imported as a library 
-    (e.g. by calling "import pendulum_template as dp" in another Python script),
-    the following is ignored.
-    In this way you can choose whether to code the solution to the exericises here in this script 
-    or to have (a) separate script(s) that include pendulum_template.py as library.
-"""
-if __name__ == "__main__" :
+if __name__ == "__main__":
     exercise_11()
-    # exercise_12()
-    # ...
+# %%
