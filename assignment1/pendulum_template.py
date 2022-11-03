@@ -66,18 +66,20 @@ class Observables:
 
 class BaseSystem:
     @abstractmethod
-    def force(self, osc):
+    def force(osc):
         """Virtual method: implemented by the child classes"""
         return NotImplementedError
 
 
 class Harmonic(BaseSystem):
-    def force(self, osc):
+    @staticmethod
+    def force(osc):
         return -osc.m * (osc.c * osc.theta + osc.gamma * osc.dtheta)
 
 
 class Pendulum(BaseSystem):
-    def force(self, osc):
+    @staticmethod
+    def force(osc):
         return -osc.m * (osc.c * np.sin(osc.theta) + osc.gamma * osc.dtheta)
 
 
@@ -116,7 +118,6 @@ class BaseIntegrator:
 
 class EulerCromerIntegrator(BaseIntegrator):
     def timestep(self, simsystem, osc, obs):
-        # accel = simsystem.force(osc) / osc.m
         osc.t += self.dt
         osc.dtheta -= osc.c * osc.theta * self.dt
         osc.theta += osc.dtheta * self.dt
@@ -275,16 +276,48 @@ def exercise_11():
     theta_0 = 0.1 * pi
     dtheta_0 = 0
     gamma = 0
-    integrator = EulerCromerIntegrator()
-    tmax = 30
+    dt = 0.01
+    integrator1 = EulerCromerIntegrator(dt)
+    integrator2 = VerletIntegrator(dt)
+    integrator3 = RK4Integrator(dt)
+    system1 = Harmonic()
+    system2 = Pendulum()
+    tmax = 300
     stepsperframe = 10
+
     osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
     sim = Simulation(osc=osc)
-    sim.run(osc, integrator, tmax)
-    sim.run_animate(osc, integrator, tmax, stepsperframe=stepsperframe)
-    sim.plot_observables("simulation1")
+    sim.run(system1, integrator1, tmax)
+    #sim.run_animate(osc, integrator1, tmax, stepsperframe=stepsperframe)
+    sim.plot_observables("Euler-Cromer with Harmonic oscillator")
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(system2, integrator1, tmax)
+    #sim.run_animate(osc, integrator1, tmax, stepsperframe=stepsperframe)
+    sim.plot_observables("Euler-Cromer with Pendulum")
+
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(system1, integrator2, tmax)
+    #sim.run_animate(system, integrator2, tmax, stepsperframe=stepsperframe)
+    sim.plot_observables("Verlet with Harmonic oscillator")
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(system2, integrator2, tmax)
+    #sim.run_animate(osc, integrator1, tmax, stepsperframe=stepsperframe)
+    sim.plot_observables("Verlet with Pendulum")
+
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(system1, integrator3, tmax)
+    #sim.run_animate(system, integrator3, tmax, stepsperframe=stepsperframe)
+    sim.plot_observables("RK4 with Harmonic oscillator")
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(system2, integrator3, tmax)
+    #sim.run_animate(osc, integrator1, tmax, stepsperframe=stepsperframe)
+    sim.plot_observables("RK4 with Pendulum")
 
 
 if __name__ == "__main__":
     exercise_11()
-# %%
