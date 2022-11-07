@@ -376,6 +376,7 @@ def exercise_12():
     plt.xlabel("theta_0")
     plt.ylabel("Period time T")
     plt.legend()
+    plt.savefig("PeriodTime12.png")
     plt.show()
 
 
@@ -429,6 +430,7 @@ def exercise_13():
     plt.xlabel("Gamma")
     plt.ylabel("Tau")
     plt.legend()
+    plt.savefig("GammaTau13.png")
     plt.show()
 
     for gamma_critical in np.linspace(3, 11, num=30):
@@ -441,12 +443,37 @@ def exercise_13():
 
 
 if __name__ == "__main__":
-    exercise_13()
+    #exercise_13()
+    pass
 
 # %% Exercise 1.4
 
 def exercise_14():
-    pass
+    # Study the damped pendulum. Determine the phase space portrait. 
+    mass = 1
+    c = 2 ** 2
+    gamma = 1
+    time_0 = 0
+    theta_0 = pi / 2
+    dtheta_0 = 0
+    dt = 0.01
+    tmax = 30
+    stepsperframe = 10
+
+    integrator = VerletIntegrator(dt)
+    system = Pendulum()  
+
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(system, integrator, tmax)
+
+    # plot dtheta vs theta 
+    plt.plot(sim.obs.pos, sim.obs.vel, label="Phase space portrait")
+    plt.xlabel("Theta")
+    plt.ylabel("dTheta")
+    plt.legend()
+    plt.savefig("PhaseSpacePortrait.png")
+    plt.show()
 
 if __name__ == "__main__":
-    exercise_14
+    exercise_14()
