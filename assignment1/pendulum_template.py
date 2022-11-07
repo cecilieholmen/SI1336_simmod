@@ -35,7 +35,7 @@ from abc import abstractmethod
 """
 
 G = 9.8  # gravitational acceleration
-pi = 3.14
+pi = np.pi
 cos = np.cos
 sin = np.sin
 
@@ -345,7 +345,6 @@ def exercise_12():
 
     for i in range(1, 10):
         theta_0 = 0.1 * i * pi
-        print(theta_0)
         theta_0_series.append(theta_0)
         T_pertutbulation_series.append(2 * pi * math.sqrt(c * (1 + theta_0**2 / 16 + 11 * theta_0**4 / 3072 + 173 * theta_0**6 / 737280))) 
 
@@ -358,7 +357,6 @@ def exercise_12():
         for j in range(1, len(sim1.obs.pos)-1):
             if sim1.obs.pos[j] > sim1.obs.pos[j-1] and sim1.obs.pos[j] > sim1.obs.pos[j+1]:
                 local_max_harmonic.append(sim1.obs.time[j])
-        print(local_max_harmonic)
         T_harmonic.append(local_max_harmonic[1] - local_max_harmonic[0])
 
 
@@ -392,7 +390,7 @@ def exercise_13():
     mass = 1
     omega0 = 2 
     c = omega0 ** 2
-    gamma = 0.5
+    gamma1 = 0.5
     time_0 = 0
     theta_0 = 1 
     dtheta_0 = 0
@@ -400,14 +398,40 @@ def exercise_13():
     tmax = 30
     stepsperframe = 10
 
-    integrator = VerletIntegrator(dt)
-    system = Harmonic
+    integrator = EulerCromerIntegrator(dt)
+    system = Harmonic        
 
-    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
-    sim = Simulation(osc=osc)
-    sim.run(system, integrator, tmax)
-    sim.run_animate(osc, integrator, tmax, stepsperframe=stepsperframe)
-    sim.plot_observables("Damped harmonic oscillator, gamma = 0.5")
+    osc1 = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma1)
+    sim1 = Simulation(osc=osc1)
+    sim1.run(system, integrator, tmax)
+    #sim1.run_animate(osc1, integrator, tmax, stepsperframe=stepsperframe)
+    #sim1.plot_observables("Damped harmonic oscillator, gamma = 0.5")
+
+    tau_list = []
+    gamma_list = [gamma for gamma in np.linspace(0.5, 3, num=15)]
+    for gamma in np.linspace(0.5, 3, num=15):
+        osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+        sim = Simulation(osc=osc)
+        sim.run(system, integrator, tmax)
+
+        amplitude_time = []
+        for j in range(1, len(sim.obs.pos)-1):
+            if sim.obs.pos[j] > sim.obs.pos[j-1] and sim.obs.pos[j] > sim.obs.pos[j+1]:
+                amplitude_time.append(sim.obs.time[j])
+
+        reduced_amplitude = []       
+        for k in range(1, len(sim.obs.pos)-1):
+            if sim.obs.pos[k] < 1.5 * 0.37 * amplitude_time[0] and sim.obs.pos[k] > 0.5 * 0.37 * amplitude_time[0]:
+                reduced_amplitude.append(sim.obs.time[k])
+            
+        tau_list.append(reduced_amplitude[-1])
+    
+    plt.plot(gamma_list, tau_list, label="Dependence of tau on gamma")
+    plt.xlabel("Gamma")
+    plt.ylabel("Tau")
+    plt.legend()
+    # plt.show()
+
 
 if __name__ == "__main__":
     exercise_13()
