@@ -388,7 +388,26 @@ if __name__ == "__main__":
 # %% Exercise 1.3
 
 def exercise_13():
-    pass
+    # Study the damped harmonic oscillator and estimate the relaxation time, tau. Study the dependence of tau on gamma. Find the smallest gamma such that the oscillator does not pass theta = 0.
+    mass = 1
+    omega0 = 2 
+    c = omega0 ** 2
+    gamma = 0.5
+    time_0 = 0
+    theta_0 = 1 
+    dtheta_0 = 0
+    dt = 0.01
+    tmax = 30
+    stepsperframe = 10
+
+    integrator = VerletIntegrator(dt)
+    system = Harmonic
+
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(system, integrator, tmax)
+    sim.run_animate(osc, integrator, tmax, stepsperframe=stepsperframe)
+    sim.plot_observables("Damped harmonic oscillator, gamma = 0.5")
 
 if __name__ == "__main__":
     exercise_13()
