@@ -283,7 +283,7 @@ def exercise_11():
     integrator3 = RK4Integrator(dt)
     system1 = Harmonic()
     system2 = Pendulum()
-    tmax = 300
+    tmax = 30
     stepsperframe = 10
 
     osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
@@ -398,14 +398,13 @@ def exercise_13():
     tmax = 30
     stepsperframe = 10
 
-    integrator = EulerCromerIntegrator(dt)
-    system = Harmonic        
+    integrator = VerletIntegrator(dt)
+    system = Harmonic()      
 
     osc1 = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma1)
     sim1 = Simulation(osc=osc1)
     sim1.run(system, integrator, tmax)
-    #sim1.run_animate(osc1, integrator, tmax, stepsperframe=stepsperframe)
-    #sim1.plot_observables("Damped harmonic oscillator, gamma = 0.5")
+    sim1.plot_observables("Damped harmonic oscillator, gamma = 0.5")
 
     tau_list = []
     gamma_list = [gamma for gamma in np.linspace(0.5, 3, num=15)]
@@ -430,7 +429,15 @@ def exercise_13():
     plt.xlabel("Gamma")
     plt.ylabel("Tau")
     plt.legend()
-    # plt.show()
+    plt.show()
+
+    for gamma_critical in np.linspace(3, 11, num=30):
+        osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma_critical)
+        sim = Simulation(osc=osc)
+        sim.run(system, integrator, tmax)
+        if min(sim.obs.pos) >= 0:
+            print(gamma_critical) # we get gamma_critical = 4.103448275862069
+            break
 
 
 if __name__ == "__main__":
