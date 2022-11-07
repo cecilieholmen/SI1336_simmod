@@ -6,6 +6,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import math as math
 from matplotlib import animation
 
 from abc import abstractmethod
@@ -96,7 +97,6 @@ class BaseIntegrator:
         """Perform a single integration step"""
         self.timestep(simsystem, osc, obs)
 
-        print(f"t = {osc.t:.2f}, theta = {osc.theta:.2f}, dtheta = {osc.dtheta:.2f}")
         # Append observables to their lists
         obs.time.append(osc.t)
         obs.pos.append(osc.theta)
@@ -127,8 +127,8 @@ class VerletIntegrator(BaseIntegrator):
     def timestep(self, simsystem, osc, obs):
         accel = simsystem.force(osc) / osc.m
         osc.t += self.dt
-        accel_dt = simsystem.force(osc) / osc.m
         osc.theta += osc.dtheta * self.dt + 0.5 * accel * self.dt**2
+        accel_dt = simsystem.force(osc) / osc.m
         osc.dtheta += 0.5 * (accel_dt + accel) * self.dt
 
 
@@ -151,6 +151,7 @@ class RK4Integrator(BaseIntegrator):
         a_3 = simsystem.force(osc) / osc.m * self.dt
         b_3 = osc.dtheta * self.dt
 
+        osc.t += self.dt / 2 
         osc.theta = theta + b_3
         osc.dtheta = dtheta + a_3
         a_4 = simsystem.force(osc) / osc.m * self.dt
@@ -320,4 +321,82 @@ def exercise_11():
 
 
 if __name__ == "__main__":
-    exercise_11()
+    #exercise_11()
+    pass
+
+# %% Exercise 1.2
+def exercise_12():
+    # Determine the period time T as a function of the initial position theta_0 and determine which system (harmonic osc./pendulum) has a larger period
+    mass = 1
+    c = 2**2
+    time_0 = 0
+    dtheta_0 = 0
+    gamma = 0
+    dt = 0.01
+    integrator1 = EulerCromerIntegrator(dt)
+    system1 = Harmonic()
+    system2 = Pendulum()
+    tmax = 30
+
+    T_harmonic = []
+    T_pendulum = []
+    T_pertutbulation_series = [] # the perturbation series to compare with the pendulum
+    theta_0_series = []
+
+    for i in range(1, 10):
+        theta_0 = 0.1 * i * pi
+        print(theta_0)
+        theta_0_series.append(theta_0)
+        T_pertutbulation_series.append(2 * pi * math.sqrt(c * (1 + theta_0**2 / 16 + 11 * theta_0**4 / 3072 + 173 * theta_0**6 / 737280))) 
+
+
+        osc1 = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+        sim1 = Simulation(osc=osc1)
+        sim1.run(system1, integrator1, tmax)
+
+        local_max_harmonic = []
+        for j in range(1, len(sim1.obs.pos)-1):
+            if sim1.obs.pos[j] > sim1.obs.pos[j-1] and sim1.obs.pos[j] > sim1.obs.pos[j+1]:
+                local_max_harmonic.append(sim1.obs.time[j])
+        print(local_max_harmonic)
+        T_harmonic.append(local_max_harmonic[1] - local_max_harmonic[0])
+
+
+        osc2 = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+        sim2 = Simulation(osc=osc2)
+        sim2.run(system2, integrator1, tmax)
+
+        local_max_pendulum = []
+        for k in range(1, len(sim2.obs.pos)-1):
+            if sim2.obs.pos[k] > sim2.obs.pos[k-1] and sim2.obs.pos[k] > sim2.obs.pos[k+1]:
+                local_max_pendulum.append(sim2.obs.time[k])
+        T_pendulum.append(local_max_pendulum[1] - local_max_pendulum[0])
+
+    plt.plot(theta_0_series, T_harmonic, label="Harmonic oscillator")
+    plt.plot(theta_0_series, T_pendulum, label="Pendulum")
+    plt.plot(theta_0_series, T_pertutbulation_series, label="Perturbation series")
+    plt.xlabel("theta_0")
+    plt.ylabel("Period time T")
+    plt.legend()
+    plt.show()
+
+
+if __name__ == "__main__":
+    #exercise_12()
+    pass
+
+# %% Exercise 1.3
+
+def exercise_13():
+    pass
+
+if __name__ == "__main__":
+    exercise_13()
+
+# %% Exercise 1.4
+
+def exercise_14():
+    pass
+
+if __name__ == "__main__":
+    exercise_14
