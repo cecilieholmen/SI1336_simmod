@@ -290,12 +290,12 @@ def exercise_11():
     sim = Simulation(osc=osc)
     sim.run(system1, integrator1, tmax)
     #sim.run_animate(osc, integrator1, tmax, stepsperframe=stepsperframe)
-    sim.plot_observables("Euler-Cromer with Harmonic oscillator")
+    sim.plot_observables("Euler-Cromer, Harmonic osc.")
     osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
     sim = Simulation(osc=osc)
     sim.run(system2, integrator1, tmax)
     #sim.run_animate(osc, integrator1, tmax, stepsperframe=stepsperframe)
-    sim.plot_observables("Euler-Cromer with Pendulum")
+    sim.plot_observables("Euler-Cromer, Pendulum")
 
     osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
     sim = Simulation(osc=osc)
@@ -318,6 +318,26 @@ def exercise_11():
     sim.run(system2, integrator3, tmax)
     #sim.run_animate(osc, integrator1, tmax, stepsperframe=stepsperframe)
     sim.plot_observables("RK4 with Pendulum")
+
+    dt1 = 0.01
+    dt2 = 0.1
+    dt3 = 0.2
+    integrator_dt1 = VerletIntegrator(dt1)
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(system2, integrator_dt1, tmax)
+    sim.plot_observables("Verlet with Pendulum, time step 0.01")
+    integrator_dt2 = VerletIntegrator(dt2)
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(system2, integrator_dt2, tmax)
+    sim.plot_observables("Verlet with Pendulum, time step 0.1")
+    integrator_dt3 = VerletIntegrator(dt3)
+    osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
+    sim = Simulation(osc=osc)
+    sim.run(system2, integrator_dt3, tmax)
+    sim.plot_observables("Verlet with Pendulum, time step 0.2")
+
 
 if __name__ == "__main__":
     exercise_11()
