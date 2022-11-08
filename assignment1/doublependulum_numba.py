@@ -148,8 +148,10 @@ class RK4Integrator:
         obs.epot.append(Epot(osc))
         obs.ekin.append(Ekin(osc))
         obs.etot.append(Epot(osc) + Ekin(osc))
-        obs.poincare_q1.append(osc.x[0])
-        obs.poincare_p1.append(osc.x[2])
+
+        if osc.x[1] == 0 and osc.x[3] > 0:
+            obs.poincare_q1.append(osc.x[0])
+            obs.poincare_p1.append(osc.x[2])
 
 
     """
@@ -219,6 +221,20 @@ class Simulation:
 
         self.plot_observables(E, title="Energy="+str(self.oscillator.E))
 
+    def run_exercise_15a(self,
+            integrator,
+            tmax=30.,   # final time
+            E=1,          # energy
+            outfile='energy1.pdf'
+            ):
+
+        n = int(tmax / integrator.dt)
+
+        for it in range(n):
+            integrator.integrate(self.oscillator, self.obs)
+
+        self.plot_p_q(E, title="Energy="+str(self.oscillator.E))
+
     def run_animate(self,
             integrator,
             tmax=30.,           # final time
@@ -257,7 +273,7 @@ class Simulation:
         plt.xlabel('q1')
         plt.ylabel('p1')
         plt.plot(self.obs.q1list, self.obs.p1list)
-        plt.savefig('q1p1_plot_' + str(E) + '.pdf')
+        plt.savefig('q1p1_plot_' + str(E) + '.png')
         plt.tight_layout()  # adapt the plot area tot the text with larger fonts 
 
         plt.figure()
@@ -266,7 +282,7 @@ class Simulation:
         plt.ylabel('p2')
         plt.plot(self.obs.q2list, self.obs.p2list)
         plt.plot([0.0, 0.0], [min(self.obs.p2list), max(self.obs.p2list)], 'k--')
-        plt.savefig('q2p2_plot_' + str(E) + '.pdf')
+        plt.savefig('q2p2_plot_' + str(E) + '.png')
         plt.tight_layout()  # adapt the plot area tot the text with larger fonts 
 
         plt.figure()
@@ -274,7 +290,7 @@ class Simulation:
         plt.xlabel('q1')
         plt.ylabel('p1')
         plt.plot(self.obs.poincare_q1, self.obs.poincare_p1, 'ro')
-        plt.savefig('poincare_plot_' + str(E) + '.pdf')
+        plt.savefig('poincare_plot_' + str(E) + '.png')
         plt.tight_layout()  # adapt the plot area tot the text with larger fonts
 
         plt.figure()
@@ -283,7 +299,7 @@ class Simulation:
         plt.ylabel('energy')
         plt.plot(self.obs.time, self.obs.epot, self.obs.time, self.obs.ekin, self.obs.time, self.obs.etot)
         plt.legend(('Epot', 'Ekin', 'Etot'))
-        plt.savefig('energy_plot_' + str(E) + '.pdf')
+        plt.savefig('energy_plot_' + str(E) + '.png')
         plt.tight_layout()  # adapt the plot area tot the text with larger fonts 
 
         plt.show()
@@ -292,29 +308,39 @@ class Simulation:
 
         plt.figure()
         plt.title(title)
-        plt.xlabel('q1')
-        plt.ylabel('p1')
-        plt.plot(self.obs.q1list, self.obs.p1list)
+        plt.xlabel('time')
+        plt.ylabel('q1')
+        plt.plot(self.obs.q1list, self.obs.time)
+        plt.savefig('exercise_15a_q1_' + str(E) + '.png')
         plt.tight_layout()  # adapt the plot area tot the text with larger fonts
 
         plt.figure()
         plt.title(title)
-        plt.xlabel('q2')
+        plt.xlabel('time')
+        plt.ylabel('q2')
+        plt.plot(self.obs.q2list, self.obs.time)
+        plt.savefig('exercise_15a_q2_' + str(E) + '.png')
+        plt.tight_layout()  # adapt the plot area tot the text with larger fonts
+
+        plt.figure()
+        plt.title(title)
+        plt.xlabel('time')
+        plt.ylabel('p1')
+        plt.plot(self.obs.p1list, self.obs.time)
+        plt.savefig('exercise_15a_p1_' + str(E) + '.png')
+        plt.tight_layout()  # adapt the plot area tot the text with larger fonts
+
+        plt.figure()
+        plt.title(title)
+        plt.xlabel('time')
         plt.ylabel('p2')
-        plt.plot(self.obs.q2list, self.obs.p2list)
+        plt.plot(self.obs.p2list, self.obs.time)
+        plt.savefig('exercise_15a_p2_' + str(E) + '.png')
         plt.tight_layout()  # adapt the plot area tot the text with larger fonts
 
  
 # %% Exercise 1.5 a)
-def exercise_15a() :
-   pass
-
-if __name__ == "__main__" :
-    #exercise_15a()
-    pass
-
-# %% Exercies 1.5 b)
-def exercise_15b() :
+def exercise_15a():
     mass = 1
     L = 1
     g = 9.8
@@ -322,25 +348,62 @@ def exercise_15b() :
     dt = 0.003
     tmax = 30
     integrator = RK4Integrator(dt)
-    E1 = 1
-    E2 = 15
-    E3 = 40
     q1 = np.random.uniform(-np.pi, np.pi)
     q2 = np.random.uniform(-np.pi, np.pi)
     p1 = 0
 
+    E1 = 1
+    p2_e1 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E1 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
+    x1 = [q1, q2, p1, p2_e1]
+    osc1 = Oscillator(mass, L, t0, E1, x1)
+    sim = Simulation(osc1)
+    sim.run_exercise_15a(integrator, tmax, E1)
+
+    E2 = 15
+    p2_e2 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E2 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
+    x2 = [q1, q2, p1, p2_e2]
+    osc2 = Oscillator(mass, L, t0, E2, x2)
+    sim2 = Simulation(osc2)
+    sim2.run_exercise_15a(integrator, tmax, E2)
+
+    E3 = 40
+    p2_e3 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E3 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
+    x3 = [q1, q2, p1, p2_e3]
+    osc3 = Oscillator(mass, L, t0, E3, x3)
+    sim3 = Simulation(osc3)
+    sim3.run_exercise_15a(integrator, tmax, E3)
+
+if __name__ == "__main__" :
+    exercise_15a()
+
+# %% Exercies 1.5 b)
+def exercise_15b():
+    mass = 1
+    L = 1
+    g = 9.8
+    t0 = 0
+    dt = 0.003
+    tmax = 30
+    integrator = RK4Integrator(dt)
+    q1 = np.random.uniform(-np.pi, np.pi)
+    q2 = np.random.uniform(-np.pi, np.pi)
+    p1 = 0
+
+    E1 = 1
     p2_e1 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E1 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
     x1 = [q1, q2, p1, p2_e1]
     osc1 = Oscillator(mass, L, t0, E1, x1)
     sim = Simulation(osc1)
     sim.run(integrator, tmax, E1)
 
+    E2 = 15
     p2_e2 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E2 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
     x2 = [q1, q2, p1, p2_e2]
     osc2 = Oscillator(mass, L, t0, E2, x2)
     sim2 = Simulation(osc2)
     sim2.run(integrator, tmax, E2)
 
+    E3 = 40
     p2_e3 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E3 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
     x3 = [q1, q2, p1, p2_e3]
     osc3 = Oscillator(mass, L, t0, E3, x3)
@@ -348,4 +411,13 @@ def exercise_15b() :
     sim3.run(integrator, tmax, E3)
 
 if __name__ == "__main__" :
-    exercise_15b()
+    #exercise_15b()
+    pass
+
+# %% Exercise 1.5 c)
+def exercise_15c():
+    pass
+
+if __name__ == "__main__" :
+    #exercise_15c()
+    pass
