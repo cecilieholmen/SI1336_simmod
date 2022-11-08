@@ -249,7 +249,7 @@ class Simulation:
     def plot_observables(self, title="simulation", ref_E=None):
 
         plt.clf()
-        plt.title(title)
+        plt.title(title, fontdict = {'fontsize' : 30})
         plt.plot(self.obs.time, self.obs.pos, "b-", label="Position")
         plt.plot(self.obs.time, self.obs.vel, "r-", label="Velocity")
         plt.plot(self.obs.time, self.obs.energy, "g-", label="Energy")
@@ -261,9 +261,9 @@ class Simulation:
                 label="Ref.",
             )
 
-        plt.xlabel("time")
-        plt.ylabel("observables")
-        plt.legend()
+        plt.xlabel("time", fontsize = 20)
+        plt.ylabel("observables", fontsize = 20)
+        plt.legend(fontsize = 20)
         plt.savefig(title + ".png")
         plt.show()
 
@@ -319,10 +319,8 @@ def exercise_11():
     #sim.run_animate(osc, integrator1, tmax, stepsperframe=stepsperframe)
     sim.plot_observables("RK4 with Pendulum")
 
-
 if __name__ == "__main__":
-    #exercise_11()
-    pass
+    exercise_11()
 
 # %% Exercise 1.2
 def exercise_12():
@@ -370,19 +368,19 @@ def exercise_12():
                 local_max_pendulum.append(sim2.obs.time[k])
         T_pendulum.append(local_max_pendulum[1] - local_max_pendulum[0])
 
-    plt.plot(theta_0_series, T_harmonic, label="Harmonic oscillator")
+    plt.title('Period time as a function of theta(0)', fontdict = {'fontsize' : 30})
     plt.plot(theta_0_series, T_pendulum, label="Pendulum")
+    plt.plot(theta_0_series, T_harmonic, label="Harmonic oscillator")
     plt.plot(theta_0_series, T_pertutbulation_series, label="Perturbation series")
-    plt.xlabel("theta_0")
-    plt.ylabel("Period time T")
-    plt.legend()
+    plt.xlabel("theta_0", fontsize=20)
+    plt.ylabel("Period time T", fontsize=20)
+    plt.legend(fontsize=20)
     plt.savefig("PeriodTime12.png")
     plt.show()
 
 
 if __name__ == "__main__":
-    #exercise_12()
-    pass
+    exercise_12()
 
 # %% Exercise 1.3
 
@@ -426,10 +424,11 @@ def exercise_13():
             
         tau_list.append(reduced_amplitude[-1])
     
+    plt.title('Dependence of tau on gamma', fontdict = {'fontsize' : 30})
     plt.plot(gamma_list, tau_list, label="Dependence of tau on gamma")
-    plt.xlabel("Gamma")
-    plt.ylabel("Tau")
-    plt.legend()
+    plt.xlabel("Gamma", fontsize=20)
+    plt.ylabel("Tau", fontsize=20)
+    plt.legend(fontsize=20)
     plt.savefig("GammaTau13.png")
     plt.show()
 
@@ -443,8 +442,7 @@ def exercise_13():
 
 
 if __name__ == "__main__":
-    #exercise_13()
-    pass
+    exercise_13()
 
 # %% Exercise 1.4
 
@@ -468,10 +466,11 @@ def exercise_14():
     sim.run(system, integrator, tmax)
 
     # plot dtheta vs theta 
+    plt.title('Phase space portrait', fontdict = {'fontsize' : 30})
     plt.plot(sim.obs.pos, sim.obs.vel, label="Phase space portrait")
-    plt.xlabel("Theta")
-    plt.ylabel("dTheta")
-    plt.legend()
+    plt.xlabel("Theta", fontsize=20)
+    plt.ylabel("dTheta", fontsize=20)
+    plt.legend(fontsize=20)
     plt.savefig("PhaseSpacePortrait.png")
     plt.show()
 
