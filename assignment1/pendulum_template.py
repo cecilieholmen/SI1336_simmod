@@ -326,17 +326,17 @@ def exercise_11():
     osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
     sim = Simulation(osc=osc)
     sim.run(system2, integrator_dt1, tmax)
-    sim.plot_observables("Verlet with Pendulum, time step 0.01")
+    sim.plot_observables("Verlet with Pendulum, dt=0.01")
     integrator_dt2 = VerletIntegrator(dt2)
     osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
     sim = Simulation(osc=osc)
     sim.run(system2, integrator_dt2, tmax)
-    sim.plot_observables("Verlet with Pendulum, time step 0.1")
+    sim.plot_observables("Verlet with Pendulum, dt=0.1")
     integrator_dt3 = VerletIntegrator(dt3)
     osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
     sim = Simulation(osc=osc)
     sim.run(system2, integrator_dt3, tmax)
-    sim.plot_observables("Verlet with Pendulum, time step 0.2")
+    sim.plot_observables("Verlet with Pendulum, dt=0.2")
 
 
 if __name__ == "__main__":
@@ -351,21 +351,27 @@ def exercise_12():
     dtheta_0 = 0
     gamma = 0
     dt = 0.01
-    integrator1 = EulerCromerIntegrator(dt)
+    integrator1 = RK4Integrator(dt)
     system1 = Harmonic()
     system2 = Pendulum()
     tmax = 30
 
     T_harmonic = []
     T_pendulum = []
-    T_pertutbulation_series = [] # the perturbation series to compare with the pendulum
+    T_pertubation_series = [] # the perturbation series to compare with the pendulum
     theta_0_series = []
 
     for i in range(1, 10):
         theta_0 = 0.1 * i * pi
         theta_0_series.append(theta_0)
-        T_pertutbulation_series.append(2 * pi * math.sqrt(c * (1 + theta_0**2 / 16 + 11 * theta_0**4 / 3072 + 173 * theta_0**6 / 737280))) 
-
+        T_pertubation_series.append(
+            2 * (pi / c) * (
+                1 + 
+                (1 / 16) * (theta_0**2) + 
+                (11 / 3072) * (theta_0**4) + 
+                (173 / 737280) * theta_0**6
+            )
+        )
 
         osc1 = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma)
         sim1 = Simulation(osc=osc1)
@@ -386,12 +392,15 @@ def exercise_12():
         for k in range(1, len(sim2.obs.pos)-1):
             if sim2.obs.pos[k] > sim2.obs.pos[k-1] and sim2.obs.pos[k] > sim2.obs.pos[k+1]:
                 local_max_pendulum.append(sim2.obs.time[k])
-        T_pendulum.append(local_max_pendulum[1] - local_max_pendulum[0])
+        if len(local_max_pendulum) > 1:
+            T_pendulum.append(local_max_pendulum[1] - local_max_pendulum[0])
+        else:
+            T_pendulum.append(sim2.obs.time[-1])
 
-    plt.title('Period time as a function of theta(0)', fontdict = {'fontsize' : 30})
-    plt.plot(theta_0_series, T_pendulum, label="Pendulum")
-    plt.plot(theta_0_series, T_harmonic, label="Harmonic oscillator")
-    plt.plot(theta_0_series, T_pertutbulation_series, label="Perturbation series")
+    plt.title(r'Period time as a function of $\theta(0)$', fontdict = {'fontsize' : 30})
+    plt.plot(theta_0_series, T_pendulum, "-x", label="Pendulum")
+    plt.plot(theta_0_series, T_harmonic, "-x", label="Harmonic oscillator")
+    plt.plot(theta_0_series, T_pertubation_series, "-x", label="Perturbation series")
     plt.xlabel("theta_0", fontsize=20)
     plt.ylabel("Period time T", fontsize=20)
     plt.legend(fontsize=20)
@@ -410,6 +419,7 @@ def exercise_13():
     omega0 = 2 
     c = omega0 ** 2
     gamma1 = 0.5
+    gamma2 = 3
     time_0 = 0
     theta_0 = 1 
     dtheta_0 = 0
@@ -423,7 +433,12 @@ def exercise_13():
     osc1 = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma1)
     sim1 = Simulation(osc=osc1)
     sim1.run(system, integrator, tmax)
-    sim1.plot_observables("Damped harmonic oscillator, gamma = 0.5")
+    sim1.plot_observables("Damped har.osc., gamma=0.5")
+
+    osc1 = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma2)
+    sim1 = Simulation(osc=osc1)
+    sim1.run(system, integrator, tmax)
+    sim1.plot_observables("Damped har. osc., gamma=3")
 
     tau_list = []
     gamma_list = [gamma for gamma in np.linspace(0.5, 3, num=15)]
@@ -439,12 +454,17 @@ def exercise_13():
 
         reduced_amplitude = []       
         for k in range(1, len(sim.obs.pos)-1):
-            if sim.obs.pos[k] < 1.5 * 0.37 * amplitude_time[0] and sim.obs.pos[k] > 0.5 * 0.37 * amplitude_time[0]:
+            if sim.obs.pos[k] < 1.45 * 0.37 * amplitude_time[0] and sim.obs.pos[k] > 0.55 * 0.37 * amplitude_time[0]:
                 reduced_amplitude.append(sim.obs.time[k])
             
         tau_list.append(reduced_amplitude[-1])
     
-    plt.title('Dependence of tau on gamma', fontdict = {'fontsize' : 30})
+    tau_gamma1 = tau_list[0]
+    tau_gamma2 = tau_list[-1]
+    print("tau for gamma=0.5: ", tau_gamma1)
+    print("tau for gamma=3: ", tau_gamma2)
+    
+    plt.title('Tau on gamma', fontdict = {'fontsize' : 30})
     plt.plot(gamma_list, tau_list, label="Dependence of tau on gamma")
     plt.xlabel("Gamma", fontsize=20)
     plt.ylabel("Tau", fontsize=20)
