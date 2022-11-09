@@ -365,7 +365,7 @@ def exercise_12():
         theta_0 = 0.1 * i * pi
         theta_0_series.append(theta_0)
         T_pertubation_series.append(
-            2 * (pi / c) * (
+            2 * (pi / np.sqrt(c)) * (
                 1 + 
                 (1 / 16) * (theta_0**2) + 
                 (11 / 3072) * (theta_0**4) + 
@@ -397,7 +397,7 @@ def exercise_12():
         else:
             T_pendulum.append(sim2.obs.time[-1])
 
-    plt.title(r'Period time as a function of $\theta(0)$', fontdict = {'fontsize' : 30})
+    plt.title(r'Period time as a function of $\theta(0)$', fontdict = {'fontsize' : 25})
     plt.plot(theta_0_series, T_pendulum, "-x", label="Pendulum")
     plt.plot(theta_0_series, T_harmonic, "-x", label="Harmonic oscillator")
     plt.plot(theta_0_series, T_pertubation_series, "-x", label="Perturbation series")
