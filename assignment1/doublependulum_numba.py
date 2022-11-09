@@ -72,12 +72,12 @@ class Oscillator:
             if (p2squared >= 0):
                 self.x[3] = np.sqrt(p2squared)
         self.q2_prev = self.x[1]
-        print("Initialization:")
-        print("E  = "+str(self.E))
-        print("q1 = "+str(self.x[0]))
-        print("q2 = "+str(self.x[1]))
-        print("p1 = "+str(self.x[2]))
-        print("p2 = "+str(self.x[3]))
+        # print("Initialization:")
+        # print("E  = "+str(self.E))
+        # print("q1 = "+str(self.x[0]))
+        # print("q2 = "+str(self.x[1]))
+        # print("p1 = "+str(self.x[2]))
+        # print("p2 = "+str(self.x[3]))
 
 
 # Class for storing observables for an oscillator
@@ -149,7 +149,7 @@ class RK4Integrator:
         obs.ekin.append(Ekin(osc))
         obs.etot.append(Epot(osc) + Ekin(osc))
 
-        if osc.x[1] == 0 and osc.x[3] > 0:
+        if abs(osc.x[1]) < 0.01 and osc.x[3] > 0:
             obs.poincare_q1.append(osc.x[0])
             obs.poincare_p1.append(osc.x[2])
 
@@ -221,20 +221,6 @@ class Simulation:
 
         self.plot_observables(E, title="Energy="+str(self.oscillator.E))
 
-    def run_exercise_15a(self,
-            integrator,
-            tmax=30.,   # final time
-            E=1,          # energy
-            outfile='energy1.pdf'
-            ):
-
-        n = int(tmax / integrator.dt)
-
-        for it in range(n):
-            integrator.integrate(self.oscillator, self.obs)
-
-        self.plot_p_q(E, title="Energy="+str(self.oscillator.E))
-
     def run_animate(self,
             integrator,
             tmax=30.,           # final time
@@ -269,75 +255,40 @@ class Simulation:
     def plot_observables(self, E, title="Double pendulum") :
 
         plt.figure()
-        plt.title(title)
-        plt.xlabel('q1')
-        plt.ylabel('p1')
+        plt.title(title, fontdict = {'fontsize' : 30})
+        plt.xlabel('q1', fontsize=20)
+        plt.ylabel('p1', fontsize=20)
         plt.plot(self.obs.q1list, self.obs.p1list)
         plt.savefig('q1p1_plot_' + str(E) + '.png')
         plt.tight_layout()  # adapt the plot area tot the text with larger fonts 
 
         plt.figure()
-        plt.title(title)
-        plt.xlabel('q2')
-        plt.ylabel('p2')
+        plt.title(title, fontdict = {'fontsize' : 30})
+        plt.xlabel('q2', fontsize=20)
+        plt.ylabel('p2', fontsize=20)
         plt.plot(self.obs.q2list, self.obs.p2list)
         plt.plot([0.0, 0.0], [min(self.obs.p2list), max(self.obs.p2list)], 'k--')
         plt.savefig('q2p2_plot_' + str(E) + '.png')
         plt.tight_layout()  # adapt the plot area tot the text with larger fonts 
 
         plt.figure()
-        plt.title(title)
-        plt.xlabel('q1')
-        plt.ylabel('p1')
+        plt.title(title, fontdict = {'fontsize' : 30})
+        plt.xlabel('q1', fontsize=20)
+        plt.ylabel('p1', fontsize=20)
         plt.plot(self.obs.poincare_q1, self.obs.poincare_p1, 'ro')
         plt.savefig('poincare_plot_' + str(E) + '.png')
         plt.tight_layout()  # adapt the plot area tot the text with larger fonts
 
         plt.figure()
-        plt.title(title)
-        plt.xlabel('time')
-        plt.ylabel('energy')
+        plt.title(title, fontdict = {'fontsize' : 30})
+        plt.xlabel('time', fontsize=20)
+        plt.ylabel('energy', fontsize=20)
         plt.plot(self.obs.time, self.obs.epot, self.obs.time, self.obs.ekin, self.obs.time, self.obs.etot)
         plt.legend(('Epot', 'Ekin', 'Etot'))
         plt.savefig('energy_plot_' + str(E) + '.png')
         plt.tight_layout()  # adapt the plot area tot the text with larger fonts 
 
         plt.show()
-    
-    def plot_p_q(self, E, title="Double pendulum") :
-
-        plt.figure()
-        plt.title(title)
-        plt.xlabel('time')
-        plt.ylabel('q1')
-        plt.plot(self.obs.q1list, self.obs.time)
-        plt.savefig('exercise_15a_q1_' + str(E) + '.png')
-        plt.tight_layout()  # adapt the plot area tot the text with larger fonts
-
-        plt.figure()
-        plt.title(title)
-        plt.xlabel('time')
-        plt.ylabel('q2')
-        plt.plot(self.obs.q2list, self.obs.time)
-        plt.savefig('exercise_15a_q2_' + str(E) + '.png')
-        plt.tight_layout()  # adapt the plot area tot the text with larger fonts
-
-        plt.figure()
-        plt.title(title)
-        plt.xlabel('time')
-        plt.ylabel('p1')
-        plt.plot(self.obs.p1list, self.obs.time)
-        plt.savefig('exercise_15a_p1_' + str(E) + '.png')
-        plt.tight_layout()  # adapt the plot area tot the text with larger fonts
-
-        plt.figure()
-        plt.title(title)
-        plt.xlabel('time')
-        plt.ylabel('p2')
-        plt.plot(self.obs.p2list, self.obs.time)
-        plt.savefig('exercise_15a_p2_' + str(E) + '.png')
-        plt.tight_layout()  # adapt the plot area tot the text with larger fonts
-
  
 # %% Exercise 1.5 a)
 def exercise_15a():
@@ -346,7 +297,7 @@ def exercise_15a():
     g = 9.8
     t0 = 0
     dt = 0.003
-    tmax = 30
+    tmax = 600
     integrator = RK4Integrator(dt)
     q1 = np.random.uniform(-np.pi, np.pi)
     q2 = np.random.uniform(-np.pi, np.pi)
@@ -357,21 +308,21 @@ def exercise_15a():
     x1 = [q1, q2, p1, p2_e1]
     osc1 = Oscillator(mass, L, t0, E1, x1)
     sim = Simulation(osc1)
-    sim.run_exercise_15a(integrator, tmax, E1)
+    sim.run_animate(integrator, tmax, E1)
 
     E2 = 15
     p2_e2 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E2 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
     x2 = [q1, q2, p1, p2_e2]
     osc2 = Oscillator(mass, L, t0, E2, x2)
     sim2 = Simulation(osc2)
-    sim2.run_exercise_15a(integrator, tmax, E2)
+    sim2.run_animate(integrator, tmax, E2)
 
     E3 = 40
     p2_e3 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E3 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
     x3 = [q1, q2, p1, p2_e3]
     osc3 = Oscillator(mass, L, t0, E3, x3)
     sim3 = Simulation(osc3)
-    sim3.run_exercise_15a(integrator, tmax, E3)
+    sim3.run_animate(integrator, tmax, E3)
 
 if __name__ == "__main__" :
     exercise_15a()
@@ -383,7 +334,7 @@ def exercise_15b():
     g = 9.8
     t0 = 0
     dt = 0.003
-    tmax = 30
+    tmax = 500
     integrator = RK4Integrator(dt)
     q1 = np.random.uniform(-np.pi, np.pi)
     q2 = np.random.uniform(-np.pi, np.pi)
@@ -411,13 +362,136 @@ def exercise_15b():
     sim3.run(integrator, tmax, E3)
 
 if __name__ == "__main__" :
-    #exercise_15b()
-    pass
+    exercise_15b()
 
 # %% Exercise 1.5 c)
 def exercise_15c():
-    pass
+    mass = 1
+    L = 1
+    g = 9.8
+    t0 = 0
+    dt = 0.003
+    tmax = 500
+    integrator = RK4Integrator(dt)
+    p1 = 0
+
+    E1 = 1
+    E2 = 15
+    E3 = 40
+
+    n = int(tmax / integrator.dt)
+
+    x1 = []
+    x2 = []
+    x3 = []
+    for i in range(5):
+        q1 = np.random.uniform(-np.pi, np.pi)
+        q2 = np.random.uniform(-np.pi, np.pi)
+        p2_1 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E1 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
+        p2_2 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E2 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
+        p2_3 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E3 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
+        x1.append([q1, q2, p1, p2_1])
+        x2.append([q1, q2, p1, p2_2])
+        x3.append([q1, q2, p1, p2_3])
+    
+
+    osc11 = Oscillator(mass, L, t0, E1, x1[0])
+    sim11 = Simulation(osc11)
+    osc12 = Oscillator(mass, L, t0, E1, x1[1])
+    sim12 = Simulation(osc12)
+    osc13 = Oscillator(mass, L, t0, E1, x1[2])
+    sim13 = Simulation(osc13)
+    osc14 = Oscillator(mass, L, t0, E1, x1[3])
+    sim14 = Simulation(osc14)
+    osc15 = Oscillator(mass, L, t0, E1, x1[4])
+    sim15 = Simulation(osc15)
+
+    for it in range(n):
+        integrator.integrate(osc11, sim11.obs)
+        integrator.integrate(osc12, sim12.obs)
+        integrator.integrate(osc13, sim13.obs)
+        integrator.integrate(osc14, sim14.obs)
+        integrator.integrate(osc15, sim15.obs)
+
+    # Plot 
+    plt.figure()
+    plt.title(f'Poincare plot, E={E1}', fontdict = {'fontsize' : 30})
+    plt.xlabel('q1', fontsize=20)
+    plt.ylabel('p1', fontsize=20)
+    plt.plot(sim11.obs.poincare_q1, sim11.obs.poincare_p1, 'r.',markersize=1)
+    plt.plot(sim12.obs.poincare_q1, sim12.obs.poincare_p1, 'b.',markersize=1)
+    plt.plot(sim13.obs.poincare_q1, sim13.obs.poincare_p1, 'g.',markersize=1)
+    plt.plot(sim14.obs.poincare_q1, sim14.obs.poincare_p1, 'y.',markersize=1)
+    plt.plot(sim15.obs.poincare_q1, sim15.obs.poincare_p1, 'k.',markersize=1)
+    plt.savefig(f'poincare_plot_ex15c_{E1=}.png')
+    plt.tight_layout()  # adapt the plot area tot the text with larger fonts
+    plt.show()
+
+
+    osc21 = Oscillator(mass, L, t0, E2, x2[0])
+    sim21 = Simulation(osc21)
+    osc22 = Oscillator(mass, L, t0, E2, x2[1])
+    sim22 = Simulation(osc22)
+    osc23 = Oscillator(mass, L, t0, E2, x2[2])
+    sim23 = Simulation(osc23)
+    osc24 = Oscillator(mass, L, t0, E2, x2[3])
+    sim24 = Simulation(osc24)
+    osc25 = Oscillator(mass, L, t0, E2, x2[4])
+    sim25 = Simulation(osc25)
+
+    for it in range(n):
+        integrator.integrate(osc21, sim21.obs)
+        integrator.integrate(osc22, sim22.obs)
+        integrator.integrate(osc23, sim23.obs)
+        integrator.integrate(osc24, sim24.obs)
+        integrator.integrate(osc25, sim25.obs)
+
+    # Plot 
+    plt.figure()
+    plt.title(f'Poincare plot, E={E2}', fontdict = {'fontsize' : 30})
+    plt.xlabel('q1', fontsize=20)
+    plt.ylabel('p1', fontsize=20)
+    plt.plot(sim21.obs.poincare_q1, sim21.obs.poincare_p1, 'r.',markersize=1)
+    plt.plot(sim22.obs.poincare_q1, sim22.obs.poincare_p1, 'b.',markersize=1)
+    plt.plot(sim23.obs.poincare_q1, sim23.obs.poincare_p1, 'g.',markersize=1)
+    plt.plot(sim24.obs.poincare_q1, sim24.obs.poincare_p1, 'y.',markersize=1)
+    plt.plot(sim25.obs.poincare_q1, sim25.obs.poincare_p1, 'k.',markersize=1)
+    plt.savefig(f'poincare_plot_ex15c_{E2=}.png')
+    plt.tight_layout()  # adapt the plot area tot the text with larger fonts
+    plt.show()
+
+
+    osc31 = Oscillator(mass, L, t0, E3, x3[0])
+    sim31 = Simulation(osc31)
+    osc32 = Oscillator(mass, L, t0, E3, x3[1])
+    sim32 = Simulation(osc32)
+    osc33 = Oscillator(mass, L, t0, E3, x3[2])
+    sim33 = Simulation(osc33)
+    osc34 = Oscillator(mass, L, t0, E3, x3[3])
+    sim34 = Simulation(osc34)
+    osc35 = Oscillator(mass, L, t0, E3, x3[4])
+    sim35 = Simulation(osc35)
+
+    for it in range(n):
+        integrator.integrate(osc31, sim31.obs)
+        integrator.integrate(osc32, sim32.obs)
+        integrator.integrate(osc33, sim33.obs)
+        integrator.integrate(osc34, sim34.obs)
+        integrator.integrate(osc35, sim35.obs)
+
+    # Plot 
+    plt.figure()
+    plt.title(f'Poincare plot, E={E3}', fontdict = {'fontsize' : 30})
+    plt.xlabel('q1', fontsize=20)
+    plt.ylabel('p1', fontsize=20)
+    plt.plot(sim31.obs.poincare_q1, sim31.obs.poincare_p1, 'r.',markersize=1)
+    plt.plot(sim32.obs.poincare_q1, sim32.obs.poincare_p1, 'b.',markersize=1)
+    plt.plot(sim33.obs.poincare_q1, sim33.obs.poincare_p1, 'g.',markersize=1)
+    plt.plot(sim34.obs.poincare_q1, sim34.obs.poincare_p1, 'y.',markersize=1)
+    plt.plot(sim35.obs.poincare_q1, sim35.obs.poincare_p1, 'k.',markersize=1)
+    plt.savefig(f'poincare_plot_ex15c_{E3=}.png')
+    plt.tight_layout()  # adapt the plot area tot the text with larger fonts
+    plt.show()
 
 if __name__ == "__main__" :
-    #exercise_15c()
-    pass
+    exercise_15c()
