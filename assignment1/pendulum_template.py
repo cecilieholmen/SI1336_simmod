@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math as math
 from matplotlib import animation
+from scipy.signal import hilbert
 
 from abc import abstractmethod
 
@@ -433,12 +434,12 @@ def exercise_13():
     osc1 = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma1)
     sim1 = Simulation(osc=osc1)
     sim1.run(system, integrator, tmax)
-    sim1.plot_observables("Damped har.osc., gamma=0.5")
+    #sim1.plot_observables("Damped har.osc., gamma=0.5")
 
     osc1 = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma2)
     sim1 = Simulation(osc=osc1)
     sim1.run(system, integrator, tmax)
-    sim1.plot_observables("Damped har. osc., gamma=3")
+    #sim1.plot_observables("Damped har. osc., gamma=3")
 
     tau_list = []
     gamma_list = [gamma for gamma in np.linspace(0.5, 3, num=15)]
@@ -447,30 +448,27 @@ def exercise_13():
         sim = Simulation(osc=osc)
         sim.run(system, integrator, tmax)
 
-        amplitude_time = []
-        for j in range(1, len(sim.obs.pos)-1):
-            if sim.obs.pos[j] > sim.obs.pos[j-1] and sim.obs.pos[j] > sim.obs.pos[j+1]:
-                amplitude_time.append(sim.obs.time[j])
+        # find envelope of theta as a function of time using scipy.signal.hilbert   
+        analytic_signal = hilbert(sim.obs.pos)
+        amplitude_envelope = np.abs(analytic_signal)
+        #plt.plot(sim.obs.time, amplitude_envelope)
+        #plt.show()
 
-        reduced_amplitude = []       
-        for k in range(1, len(sim.obs.pos)-1):
-            if sim.obs.pos[k] < 1.45 * 0.37 * amplitude_time[0] and sim.obs.pos[k] > 0.55 * 0.37 * amplitude_time[0]:
-                reduced_amplitude.append(sim.obs.time[k])
-            
-        tau_list.append(reduced_amplitude[-1])
+        # find the time when the amplitude envelope is 1/e of its maximum value
+        tau = sim.obs.time[np.where(amplitude_envelope < 1/np.e * max(amplitude_envelope))[0][0]]
+        tau_list.append(tau)
+
+    plt.title(r'Relaxation time $\tau$ as a function of $\gamma$', fontdict = {'fontsize' : 25})
+    plt.plot(gamma_list, tau_list, "-x")
+    plt.xlabel("gamma", fontsize=20)
+    plt.ylabel("Relaxation time tau", fontsize=20)
+    plt.savefig("RelaxationTime13.png")
+    plt.show()
     
     tau_gamma1 = tau_list[0]
     tau_gamma2 = tau_list[-1]
     print("tau for gamma=0.5: ", tau_gamma1)
     print("tau for gamma=3: ", tau_gamma2)
-    
-    plt.title('Tau on gamma', fontdict = {'fontsize' : 30})
-    plt.plot(gamma_list, tau_list, label="Dependence of tau on gamma")
-    plt.xlabel("Gamma", fontsize=20)
-    plt.ylabel("Tau", fontsize=20)
-    plt.legend(fontsize=20)
-    plt.savefig("GammaTau13.png")
-    plt.show()
 
     for gamma_critical in np.linspace(3, 11, num=30):
         osc = Oscillator(mass, c, time_0, theta_0, dtheta_0, gamma_critical)

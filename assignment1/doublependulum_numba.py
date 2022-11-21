@@ -340,26 +340,26 @@ def exercise_15b():
     q2 = np.random.uniform(-np.pi, np.pi)
     p1 = 0
 
-    E1 = 1
+    E1 = 10
     p2_e1 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E1 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
     x1 = [q1, q2, p1, p2_e1]
     osc1 = Oscillator(mass, L, t0, E1, x1)
     sim = Simulation(osc1)
     sim.run(integrator, tmax, E1)
 
-    E2 = 15
-    p2_e2 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E2 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
-    x2 = [q1, q2, p1, p2_e2]
-    osc2 = Oscillator(mass, L, t0, E2, x2)
-    sim2 = Simulation(osc2)
-    sim2.run(integrator, tmax, E2)
+    # E2 = 15
+    # p2_e2 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E2 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
+    # x2 = [q1, q2, p1, p2_e2]
+    # osc2 = Oscillator(mass, L, t0, E2, x2)
+    # sim2 = Simulation(osc2)
+    # sim2.run(integrator, tmax, E2)
 
-    E3 = 40
-    p2_e3 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E3 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
-    x3 = [q1, q2, p1, p2_e3]
-    osc3 = Oscillator(mass, L, t0, E3, x3)
-    sim3 = Simulation(osc3)
-    sim3.run(integrator, tmax, E3)
+    # E3 = 40
+    # p2_e3 = np.sqrt(mass * L ** 2 * (1 + np.sin(q1 - q2) ** 2) * (E3 + mass * g * L * (2 * np.cos(q1) + np.cos(q2) - 3)))
+    # x3 = [q1, q2, p1, p2_e3]
+    # osc3 = Oscillator(mass, L, t0, E3, x3)
+    # sim3 = Simulation(osc3)
+    # sim3.run(integrator, tmax, E3)
 
 if __name__ == "__main__" :
     exercise_15b()
