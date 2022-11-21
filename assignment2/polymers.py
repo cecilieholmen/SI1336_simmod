@@ -72,7 +72,6 @@ def self_avoiding_random_walk(x_0, y_0, steps):
         elif random_number == 3:
             x.append(x[-1])
             y.append(y[-1] - 1)
-
         if (x[-1], y[-1]) in random_walk_dictionary:
             return False
         else:
@@ -106,7 +105,7 @@ def self_avoiding_random_walk_three_directions(x_0, y_0, steps):
                     x.append(x[-1] - 1)
                     y.append(y[-1])
         elif random_number == 2:
-            if len(x) == 1:
+            if len(y) == 1:
                 x.append(x[-1])
                 y.append(y[-1] + 1)
             elif len(x) > 1 and y[-1] != y[-2] + 1:
@@ -116,7 +115,7 @@ def self_avoiding_random_walk_three_directions(x_0, y_0, steps):
                     x.append(x[-1])
                     y.append(y[-1] + 1)
         elif random_number == 3:
-            if len(x) == 1:
+            if len(y) == 1:
                 x.append(x[-1])
                 y.append(y[-1] - 1)
             elif len(x) > 1 and y[-1] != y[-2] - 1:
@@ -128,6 +127,30 @@ def self_avoiding_random_walk_three_directions(x_0, y_0, steps):
         else:
             random_walk_dictionary[(x[-1], y[-1])] = 1
     return True
+
+def self_avoiding_random_walk_E(x_0, y_0, steps):
+    random_walk_dictionary = {(x_0, y_0): 1}
+    x = [x_0]
+    y = [y_0]
+    for i in range(steps):
+        random_number = int(4 * random.random())
+        if random_number == 0:
+            x.append(x[-1] + 1)
+            y.append(y[-1])
+        elif random_number == 1:
+            x.append(x[-1] - 1)
+            y.append(y[-1])
+        elif random_number == 2:
+            x.append(x[-1])
+            y.append(y[-1] + 1)
+        elif random_number == 3:
+            x.append(x[-1])
+            y.append(y[-1] - 1)
+        if (x[-1], y[-1]) in random_walk_dictionary:
+            return [[0], [0]]
+        else:
+            random_walk_dictionary[(x[-1], y[-1])] = 1
+    return [x, y]
 
 def plot_random_walk_2d(walk, steps):
     plt.clf()
@@ -310,8 +333,8 @@ def exercise_21d():
 
     plt.clf()
     plt.title(f'Self Avoiding Random Walk, {number_walks} walks', fontdict = {'fontsize' : 15})
-    plt.loglog(steps_list, success_list_improved, "-x", label="Successful walks, improved algorithm")
-    plt.loglog(steps_list, success_list, "-x", label="Successful walks")
+    plt.plot(steps_list, success_list_improved, "-x", label="Successful walks, improved algorithm")
+    plt.plot(steps_list, success_list, "-x", label="Successful walks")
     plt.xlabel("Number of steps, N", fontsize = 15)
     plt.ylabel(f"Number of successfull walks", fontsize = 15)
     plt.legend(fontsize = 10)
@@ -321,4 +344,40 @@ def exercise_21d():
 
 if __name__ == '__main__':
     exercise_21d()
+# %% Exercise 2.1 e)
+# Compute the root mean square end-to-end distances for the self-avoiding random walk for the range of N that you can cover.
+
+def exercise_21e():
+    initial_position = [0, 0]
+    steps_list = [steps for steps in range(1, 40)]
+    number_walks = 1000
+    rmsd_list_1 = []
+    rmsd_list_2 = []
+
+    for steps in steps_list:
+        r2_list_1 = []
+        r2_list_2 = []
+
+        for i in range(number_walks):
+            random_walk_1 = self_avoiding_random_walk_E(initial_position[0], initial_position[1], steps)
+            r2_list_1.append(distance_r(random_walk_1) ** 2)
+            random_walk_2 = random_walk_2d(initial_position[0], initial_position[1], steps)
+            r2_list_2.append(distance_r(random_walk_2) ** 2)
+
+        rmsd_list_1.append(np.sqrt(np.sum(r2_list_1) / number_walks))
+        rmsd_list_2.append(np.sqrt(np.sum(r2_list_2) / number_walks))
+
+    plt.clf()
+    plt.title(f'Self Avoiding Random Walk, {number_walks} walks', fontdict = {'fontsize' : 15})
+    plt.loglog(steps_list, rmsd_list_1, "-x", label="Root Mean Square Distance, Self Avoiding")
+    plt.loglog(steps_list, rmsd_list_2, "-x", label="Root Mean Square Distance, Random Walk")
+    plt.xlabel("Number of steps, N", fontsize = 15)
+    plt.ylabel(f"Root Mean Square Distance", fontsize = 15)
+    plt.legend(fontsize = 10)
+    plt.savefig(f"Random_Walk_Self_Avoiding_RMSD.png")
+    plt.grid()
+
+if __name__ == '__main__':
+    exercise_21e()
+
 # %%
