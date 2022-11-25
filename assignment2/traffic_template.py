@@ -1,3 +1,4 @@
+# %% Imports
 #!/bin/python3
 
 # Template for traffic simulation
@@ -19,9 +20,8 @@ from matplotlib import animation
 import numpy.random as rng
 import numpy as np
 
-import matplotlib
 
-
+# %% Class for the state of the system
 class Cars:
 
     """ Class for the state of a number of cars """
@@ -41,6 +41,7 @@ class Cars:
     def distance(self, i):
         # TODO: Implement the function returning the PERIODIC distance 
         # between car i and the one in front 
+        return (self.x[(i+1)%self.numCars] - self.x[i]) % self.roadLength
 
 
 class Observables:
@@ -68,10 +69,8 @@ class BasePropagator:
         obs.flowrate.append(fr)  # CHANGE!
               
     def timestep(self, cars, obs):
-
         """ Virtual method: implemented by the child classes """
-        
-        pass
+        return NotImplementedError
       
         
 class ConstantPropagator(BasePropagator) :
@@ -101,12 +100,28 @@ class MyPropagator(BasePropagator) :
 
     def timestep(self, cars, obs):
         # TODO Here you should implement the car behaviour rules
+        for i in range(cars.numCars):
+            if cars.v[i] < self.vmax:
+                cars.v[i] += 1
+            distance = Cars.distance(cars, i)
+            if distance <= cars.v[i]:
+                cars.v[i] = distance - 1
+            if cars.v[i] > 0:
+                if rng.random() < self.p:
+                    cars.v[i] -= 1
+            cars.x[i] += cars.v[i]
+
+        fr = sum(cars.v) / cars.roadLength
+        cars.t += 1
+        return fr
 
 ############################################################################################
 
 def draw_cars(cars, cars_drawing):
 
     """ Used later on to generate the animation """
+    cars_drawing.clear()
+    cars_drawing.axis('off')
     theta = []
     r     = []
 
@@ -139,10 +154,10 @@ class Simulation:
 
     def plot_observables(self, title="simulation"):
         plt.clf()
-        plt.title(title)
+        plt.title(title, fontsize=20)
         plt.plot(self.obs.time, self.obs.flowrate)
-        plt.xlabel('time')
-        plt.ylabel('flow rate')
+        plt.xlabel('time', fontsize=20)
+        plt.ylabel('flow rate', fontsize=20)
         plt.savefig(title + ".pdf")
         plt.show()
 
@@ -174,36 +189,288 @@ class Simulation:
         # Call the animator, blit=False means re-draw everything
         anim = animation.FuncAnimation(plt.gcf(), animate,  # init_func=init,
                                        fargs=[self.cars,self.obs,propagator,ax,stepsperframe],
-                                       frames=numframes, interval=50, blit=True, repeat=False)
+                                       frames=numframes, interval=50, blit=False, repeat=False)
         plt.show()
 
         # If you experience problems visualizing the animation and/or
         # the following figures comment out the next line 
-        # plt.waitforbuttonpress(30)
+        plt.waitforbuttonpress(30)
 
         self.plot_observables(title)
+
+    # Run without displaying any animation (fast)
+    def run_ex22a(self,
+            propagator,
+            numsteps=200,           # final time
+            ):
+
+        for it in range(numsteps):
+            propagator.propagate(self.cars, self.obs)
+
+        return [self.obs.flowrate, self.obs.time]
     
 
-# It's good practice to encapsulate the script execution in 
-# a main() function (e.g. for profiling reasons)
-def main() :
+# %% Exercise 2.2 a)
+def exercise22a() :
+    numCars = [c for c in range(0, 55, 5)]
+    vmax = 2
+    p = 0.5
+    roadLength = 50
+    numsteps = 200
+    flowrate_list = []
+    density_list = []
 
-    # Here you can define one or more instances of cars, with possibly different parameters, 
-    # and pass them to the simulator 
+    for n in numCars:
+        density_list.append(n / roadLength)
 
-    # Be sure you are passing the correct initial conditions!
-    cars = Cars(numCars = 5, roadLength=50)
+        cars = Cars(n, roadLength=roadLength)
+        sim = Simulation(cars)
+        propagator = MyPropagator(vmax, p)
+        flowrate_list.append(np.mean(sim.run_ex22a(propagator, numsteps=numsteps)[0]))
 
-    # Create the simulation object for your cars instance:
-    simulation = Simulation(cars)
+    plt.clf()
+    plt.title("Flow rate vs. density", fontsize=20)
+    plt.plot(density_list, flowrate_list, '-x')
+    plt.xlabel('density', fontsize=20)
+    plt.ylabel('average flow rate', fontsize=20)
+    plt.grid()
+    plt.savefig("flowrate_vs_density.pdf")
+    plt.show()
 
-    # simulation.run_animate(propagator=ConstantPropagator())
-    simulation.run_animate(propagator=MyPropagator(vmax=2, p=0.2))
+    max_flowrate = max(flowrate_list)
+    max_density = density_list[flowrate_list.index(max_flowrate)]
+    print("Max density: ", max_density)
 
 
-# Calling 'main()' if the script is executed.
-# If the script is instead just imported, main is not called (this can be useful if you want to
-# write another script importing and utilizing the functions and classes defined in this one)
 if __name__ == "__main__" :
-    main()
+    exercise22a()
 
+
+# %% Excercise 2.2 b)
+
+def exercise22b():
+    numCars = 25
+    vmax = 2
+    p = 0.5
+    roadLength = 50
+    numsteps = 100
+    flowrate_list = []
+
+    standard_error_list = []
+    #equilibrium_time = []
+
+    n_simulations = 150
+    
+    for i in range(n_simulations):
+        cars = Cars(numCars, roadLength=roadLength)
+        sim = Simulation(cars)
+        propagator = MyPropagator(vmax, p)
+        flowrate, time = sim.run_ex22a(propagator, numsteps=numsteps)
+        flowrate_list.append(np.mean(flowrate))
+
+        if i > 0:
+            standard_error = np.std(flowrate_list) / np.sqrt(len(flowrate_list))
+            standard_error_list.append(standard_error)
+
+    # find equilibrium time, which is the time when the flow rate is constant
+        # for j in range(1, len(flowrate)):
+        #     if abs(flowrate_list[j] - flowrate_list[j-1]) <= 0.001:
+        #         equilibrium_time.append(time[j])
+        #         break
+    
+    for i in range(1, len(standard_error_list)):
+        if standard_error_list[i] <= 0.001:
+            print("Standard error is less than 0.001 at iteration: ", i)
+            break
+
+    plt.clf()
+    plt.title("Standard error vs. number of simulations", fontsize=20)
+    plt.plot(range(1, n_simulations), standard_error_list, '-x')
+    plt.plot(range(1, n_simulations), [0.001 for i in range(1, n_simulations)], '--')
+    plt.xlabel('number of simulations', fontsize=20)
+    plt.ylabel('standard error', fontsize=20)
+    plt.grid()
+    plt.savefig("standard_error_vs_num_simulations.pdf")
+    plt.show()
+
+    numCars_1 = 25
+    numCars_2 = 35
+    vmax_1 = 2
+    vmax_2 = 4
+    p_1 = 0.5
+    p_2 = 0.8
+    roadLength = 50
+    numsteps = 200
+
+    cars_1 = Cars(numCars_1, roadLength=roadLength)
+    sim_1 = Simulation(cars_1)
+    propagator_1 = MyPropagator(vmax_1, p_1)
+    sim_1.run(propagator_1, numsteps=numsteps, title=f"Flowrate for numCars={numCars_1}, vmax={vmax_1}, p={p_1}")
+
+    cars_2 = Cars(numCars_2, roadLength=roadLength)
+    sim_2 = Simulation(cars_2)
+    propagator_2 = MyPropagator(vmax_1, p_1)
+    sim_2.run(propagator_2, numsteps=numsteps, title=f"Flowrate for numCars={numCars_2}, vmax={vmax_1}, p={p_1}")
+
+    cars_3 = Cars(numCars_1, roadLength=roadLength)
+    sim_3 = Simulation(cars_3)
+    propagator_3 = MyPropagator(vmax_2, p_1)
+    sim_3.run(propagator_3, numsteps=numsteps, title=f"Flowrate for numCars={numCars_1}, vmax={vmax_2}, p={p_1}")
+
+    cars_4 = Cars(numCars_1, roadLength=roadLength)
+    sim_4 = Simulation(cars_4)
+    propagator_4 = MyPropagator(vmax_1, p_2)
+    sim_4.run(propagator_4, numsteps=numsteps, title=f"Flowrate for numCars={numCars_1}, vmax={vmax_1}, p={p_2}")
+
+if __name__ == "__main__" :
+    exercise22b()
+
+# %% Excercise 2.2 c)
+
+def exercise22c():
+    vmax = 2
+    p = 0.5
+    numsteps = 200
+    roadLength = [length for length in range(30, 1000)]
+    density = 0.2
+    numCars = []
+    flowrate_list = []
+
+    for i in range(len(roadLength)):
+        numCars.append(int(roadLength[i] * density))
+        cars = Cars(numCars[i], roadLength=roadLength[i])
+        sim = Simulation(cars)
+        propagator = MyPropagator(vmax, p)
+        flowrate = sim.run_ex22a(propagator, numsteps=numsteps)[0]
+        flowrate_list.append(np.mean(flowrate))
+
+    plt.clf()
+    plt.title("Flow rate vs. road length", fontsize=20)
+    plt.plot(roadLength, flowrate_list, '-x')
+    plt.xlabel('road length', fontsize=20)
+    plt.ylabel('average flow rate', fontsize=20)
+    plt.grid()
+    plt.savefig("flowrate_vs_road_length.pdf")
+    plt.show()
+
+if __name__ == "__main__" :
+    exercise22c()
+
+# %% Excercise 2.2 d)
+
+def exercise22d():
+    vmax = 1
+    vmax_1 = 2
+    vmax_2 = 5
+    p = 0.5
+    roadLength = 50
+    numsteps = 200
+    numCars = 25
+
+    cars = Cars(numCars, roadLength=roadLength)
+    sim = Simulation(cars)
+    propagator = MyPropagator(vmax, p)
+    flowrate = sim.run_ex22a(propagator, numsteps=numsteps)[0]
+
+    cars_1 = Cars(numCars, roadLength=roadLength)
+    sim_1 = Simulation(cars_1)
+    propagator_1 = MyPropagator(vmax_1, p)
+    flowrate_1 = sim_1.run_ex22a(propagator_1, numsteps=numsteps)[0]
+
+    cars_2 = Cars(numCars, roadLength=roadLength)
+    sim_2 = Simulation(cars_2)
+    propagator_2 = MyPropagator(vmax_2, p)
+    flowrate_2 = sim_2.run_ex22a(propagator_2, numsteps=numsteps)[0]
+
+    plt.clf()
+    plt.title(f"Flow rate vs. time, velocity = {vmax}", fontsize=20)
+    plt.plot(range(numsteps), flowrate, '-x', label=f"vmax={vmax}")
+    plt.xlabel('time', fontsize=20)
+    plt.ylabel('flow rate', fontsize=20)
+    plt.legend()
+    plt.grid()
+    plt.savefig(f"flowrate_vs_time_velocity{vmax}.pdf")
+    plt.show()
+
+    plt.clf()
+    plt.title(f"Flow rate vs. time, velocity = {vmax_1}", fontsize=20)
+    plt.plot(range(numsteps), flowrate_1, '-x', label=f"vmax={vmax_1}")
+    plt.xlabel('time', fontsize=20)
+    plt.ylabel('flow rate', fontsize=20)
+    plt.legend()
+    plt.grid()
+    plt.savefig(f"flowrate_vs_time_velocity{vmax_1}.pdf")
+    plt.show()
+
+    plt.clf()
+    plt.title(f"Flow rate vs. time, velocity = {vmax_2}", fontsize=20)
+    plt.plot(range(numsteps), flowrate_2, '-x', label=f"vmax={vmax_2}")
+    plt.xlabel('time', fontsize=20)
+    plt.ylabel('flow rate', fontsize=20)
+    plt.legend()
+    plt.grid()
+    plt.savefig(f"flowrate_vs_time_velocity{vmax_2}.pdf")
+    plt.show()
+
+if __name__ == "__main__" :
+    exercise22d()
+
+# %% Excercise 2.2 e)
+def exercise22e():
+    vmax = 2
+    p_1 = 0.5
+    p_2 = 0.8
+    p_3 = 0.2
+    roadLength = 50
+    numsteps = 200
+    numCars = 25
+
+    cars = Cars(numCars, roadLength=roadLength)
+    sim = Simulation(cars)
+    propagator = MyPropagator(vmax, p_1)
+    flowrate = sim.run_ex22a(propagator, numsteps=numsteps)[0]
+
+    cars_1 = Cars(numCars, roadLength=roadLength)
+    sim_1 = Simulation(cars_1)
+    propagator_1 = MyPropagator(vmax, p_2)
+    flowrate_1 = sim_1.run_ex22a(propagator_1, numsteps=numsteps)[0]
+
+    cars_2 = Cars(numCars, roadLength=roadLength)
+    sim_2 = Simulation(cars_2)
+    propagator_2 = MyPropagator(vmax, p_3)
+    flowrate_2 = sim_2.run_ex22a(propagator_2, numsteps=numsteps)[0]
+
+    plt.clf()
+    plt.title(f"Flow rate vs. time, p = {p_1}", fontsize=20)
+    plt.plot(range(numsteps), flowrate, '-x', label=f"p={p_1}")
+    plt.xlabel('time', fontsize=20)
+    plt.ylabel('flow rate', fontsize=20)
+    plt.legend()
+    plt.grid()
+    plt.savefig(f"flowrate_vs_time_p{p_1}.pdf")
+    plt.show()
+    
+    plt.clf()
+    plt.title(f"Flow rate vs. time, p = {p_2}", fontsize=20)
+    plt.plot(range(numsteps), flowrate_1, '-x', label=f"p={p_2}")
+    plt.xlabel('time', fontsize=20)
+    plt.ylabel('flow rate', fontsize=20)
+    plt.legend()
+    plt.grid()
+    plt.savefig(f"flowrate_vs_time_p{p_2}.pdf")
+    plt.show()
+
+    plt.clf()
+    plt.title(f"Flow rate vs. time, p = {p_3}", fontsize=20)
+    plt.plot(range(numsteps), flowrate_2, '-x', label=f"p={p_3}")
+    plt.xlabel('time', fontsize=20)
+    plt.ylabel('flow rate', fontsize=20)
+    plt.legend()
+    plt.grid()
+    plt.savefig(f"flowrate_vs_time_p{p_3}.pdf")
+    plt.show()
+
+if __name__ == "__main__" :
+    exercise22e()
+
+# %%

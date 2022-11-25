@@ -194,7 +194,8 @@ def exercise_21a():
     plot_random_walk_2d(random_walk_3, steps_3)
 
 if __name__ == '__main__':
-    exercise_21a()
+    #exercise_21a()
+    pass
 
 # %% Exercise 2.1 b)
 # Program that generates a two-dimensional random walk with single steps along x or y. 
@@ -236,7 +237,8 @@ def exercise_21b():
     plot_random_walk_generator(random_walk8, steps, m2, r0, a, c_2)
 
 if __name__ == '__main__':
-    exercise_21b()
+    #exercise_21b()
+    pass
 
 # %% Exercise 2.1 c)
 # Program that generates a two-dimensional random walk with single steps along x or y. 
@@ -261,17 +263,16 @@ def exercise_21c():
             r_list.append(distance_r(random_walk))
 
         variance = np.sum(r2_list) / number_walks - (np.sum(r_list) / number_walks) ** 2
-        print(f"Variance: {variance}")
 
         rmsd_list.append(np.sqrt(np.sum(r2_list) / number_walks))
         rmsf_list.append(np.sqrt(variance * number_walks / (number_walks - 1)))
         sd_list.append(np.sqrt(variance / (number_walks - 1)))
 
     plt.clf()
-    plt.title(f'Random Walk, {number_walks} walks', fontdict = {'fontsize' : 10})
+    plt.title(f'Random Walk, {number_walks} walks', fontdict = {'fontsize' : 20})
     plt.plot(steps_list, rmsd_list, "-x", label="Root Mean Square Distance")
     plt.plot(steps_list, rmsf_list, "-x", label="Root Mean Square Fluctuation")
-    plt.plot(steps_list, sd_list, "-x", label="Standard Deviation")
+    plt.plot(steps_list, sd_list, "-x", label="Standard Error Estimate")
     plt.xlabel("Number of steps", fontsize = 15)
     plt.ylabel("Value", fontsize = 15)
     plt.legend(fontsize = 10)
@@ -280,7 +281,8 @@ def exercise_21c():
     plt.show()
 
 if __name__ == '__main__':
-    exercise_21c()
+    #exercise_21c()
+    pass
     
 # %% Exercise 2.1 d)
 # Program that generates a two-dimensional random walk with single steps along x or y that does not cross itself.
@@ -378,6 +380,7 @@ def exercise_21e():
     plt.grid()
 
 if __name__ == '__main__':
-    exercise_21e()
+    #exercise_21e()
+    pass
 
 # %%
