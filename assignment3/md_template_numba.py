@@ -1,12 +1,9 @@
-# Python molecular dynamics simulation of particles in 2 dimensions with real time animation
+#%% Python molecular dynamics simulation of particles in 2 dimensions with real time animation
 # BH, OF, MP, AJ, TS 2022-11-20, latest verson 2021-10-21
 
-import math
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import animation
-import random as rnd
 
 # This local library contains the functions needed to perform force calculation
 # Since this is by far the most expensive part of the code, it is 'wrapped aside'
@@ -27,7 +24,7 @@ import md_force_calculator as md
     parameters of the class (the one you can access via 'self.variable_name' or 'self.function_name()').
 
 """
-
+#%%
 # Boltzmann constant
 kB = 1.0
 
@@ -40,6 +37,7 @@ N_STEPS_THERMO = 10
 # Lower (increase) this if the size of the disc is too large (small) when running run_animate()
 DISK_SIZE = 750
 
+#%%
 class MDsimulator:
 
     """
@@ -147,16 +145,22 @@ class MDsimulator:
             (THE LATTER YOU NEED TO IMPLEMENT!)
         """
 
-        # TODO
-        # When using a thermostat, modify the velocities of all particles here.
-        # Note that you can use thermalize() from md_force_calculator.py.
-
         for i in range(0,self.n):
             # At the first step we alread have the "full step" velocity
             if self.step > 0:
                 # Update the velocities with a half step
                 self.vx[i] += self.fx[i]*self.invmass*0.5*self.dt
                 self.vy[i] += self.fy[i]*self.invmass*0.5*self.dt
+
+
+            # When temperature coupling, modify the velocity of one particle.
+            # Note that you can use thermalize() from md_force_calculator.py.
+            if self.step % N_STEPS_THERMO == 0:
+                # Pick a random particle
+                particle = np.random.randint(0, self.n)
+                # Set its velocity to a random value
+                self.vx[particle], self.vy[particle] = md.thermalize(self.vx, self.vy, np.sqrt(self.kBT/self.mass))
+            
 
             # Add the kinetic energy of particle i to the total
             self.Ekin += 0.5*self.mass*(self.vx[i]*self.vx[i] + self.vy[i]*self.vy[i])
@@ -271,15 +275,22 @@ class MDsimulator:
         plt.show()
 
 
-# It's good practice to encapsulate the script execution in 
+#%% It's good practice to encapsulate the script execution in 
 # a main() function (e.g. for profiling reasons)
-def exercise_32a() :
-    # ...
+def exercise_32a():
+    n = 48
+    temperature = 0.4
+    nsteps = 20000
+    numStepsPerFrame = 100
+    numPerRow = 8
+    initial_spacing = 1.12
+    startStepForAveraging = 100
+    dt = 0.01
+    mass = 1
+    lj = MDsimulator(n, mass, numPerRow, initial_spacing, temperature, dt, nsteps, numStepsPerFrame, startStepForAveraging)
+    lj.simulate_animate()
+    lj.plot_energy()
 
-
-# Calling 'main()' if the script is executed.
-# If the script is instead just imported, main is not called (this can be useful if you want to
-# write another script importing and utilizing the functions and classes defined in this one)
 if __name__ == "__main__" :
-
     exercise_32a()
+# %%

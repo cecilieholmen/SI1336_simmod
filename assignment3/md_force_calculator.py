@@ -29,22 +29,22 @@ def gaussianRandomNumbers(sigma):
 def thermalize(vx, vy, sqrtKineticEnergyPerParticle):
     for i in range(0, len(vx)):
         vx[i], vy[i] = gaussianRandomNumbers(sqrtKineticEnergyPerParticle)
+    return vx, vy
 
 # The pair potential
 @nmb.jit(nopython=True)
 def pairEnergy(r):
-    # TODO
-    # Implement the pair energy calculation here!
-
-    return ### POTENTIAL ###
+    sigma = 1
+    epsilon = 1
+    potential = 4 * epsilon * ( (sigma/r)**12 - (sigma/r)**6 )
+    return potential
 
 # The pair force
 @nmb.jit(nopython=True)    
 def pairForce(r):
-    # TODO
-    # Implement the pair force calculation here!
-
-    return ### FORCE ###
+    potential = pairEnergy(r)
+    force = -12 * potential / r**13
+    return force
 
 # Calculate the shortest periodic distance, unit cell [0,Lx],[0,Ly]
 # Returns the difference along x, along y and the distance
