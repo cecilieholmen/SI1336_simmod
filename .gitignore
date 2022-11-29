@@ -3,3 +3,4 @@ test/
 *.pdf
 *.png
 *.pptx
+*.pyc
