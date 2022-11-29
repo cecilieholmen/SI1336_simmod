@@ -72,7 +72,7 @@ class MDsimulator:
         self.Lx = numPerRow*initial_spacing
         self.Ly = numPerRow*initial_spacing
         self.area = self.Lx*self.Ly
-        self.T = 0.4
+        self.T = T
         self.kBT = kB*T
         self.dt = dt
         self.nsteps = nsteps
@@ -147,17 +147,16 @@ class MDsimulator:
             (THE LATTER YOU NEED TO IMPLEMENT!)
         """
 
+        # TODO
+        # When using a thermostat, modify the velocities of all particles here.
+        # Note that you can use thermalize() from md_force_calculator.py.
+
         for i in range(0,self.n):
             # At the first step we alread have the "full step" velocity
             if self.step > 0:
                 # Update the velocities with a half step
                 self.vx[i] += self.fx[i]*self.invmass*0.5*self.dt
                 self.vy[i] += self.fy[i]*self.invmass*0.5*self.dt
-
-            # TODO
-            # When temperature coupling, modify the velocity of one particle.
-            # Note that you can use thermalize() from md_force_calculator.py.
-            
 
             # Add the kinetic energy of particle i to the total
             self.Ekin += 0.5*self.mass*(self.vx[i]*self.vx[i] + self.vy[i]*self.vy[i])
