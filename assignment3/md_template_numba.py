@@ -145,22 +145,14 @@ class MDsimulator:
             (THE LATTER YOU NEED TO IMPLEMENT!)
         """
 
+        #self.vx, self.vy = md.thermalize(self.vx, self.vy, np.sqrt(self.Ekin/self.n))
+
         for i in range(0,self.n):
             # At the first step we alread have the "full step" velocity
             if self.step > 0:
                 # Update the velocities with a half step
                 self.vx[i] += self.fx[i]*self.invmass*0.5*self.dt
                 self.vy[i] += self.fy[i]*self.invmass*0.5*self.dt
-
-
-            # When temperature coupling, modify the velocity of one particle.
-            # Note that you can use thermalize() from md_force_calculator.py.
-            if self.step % N_STEPS_THERMO == 0:
-                # Pick a random particle
-                particle = np.random.randint(0, self.n)
-                # Set its velocity to a random value
-                self.vx[particle], self.vy[particle] = md.thermalize(self.vx, self.vy, np.sqrt(self.kBT/self.mass))
-            
 
             # Add the kinetic energy of particle i to the total
             self.Ekin += 0.5*self.mass*(self.vx[i]*self.vx[i] + self.vy[i]*self.vy[i])
@@ -267,30 +259,39 @@ class MDsimulator:
         """
         
         plt.figure()
+        plt.title(title)
         plt.xlabel('time')
         plt.ylabel('energy')
-        plt.plot(self.outt, self.ekinList, self.outt, self.epotList, self.outt, self.etotList)
+        plt.plot(self.outt, self.ekinList, self.outt, self.epotList, self.outt, self.etotList, )
         plt.legend( ('Ekin','Epot','Etot') )
+        plt.grid()
         plt.savefig(title + ".pdf")
         plt.show()
 
 
-#%% It's good practice to encapsulate the script execution in 
-# a main() function (e.g. for profiling reasons)
+#%% Excerise 3.2 a)
 def exercise_32a():
-    n = 48
-    temperature = 0.4
-    nsteps = 20000
-    numStepsPerFrame = 100
-    numPerRow = 8
-    initial_spacing = 1.12
-    startStepForAveraging = 100
-    dt = 0.01
-    mass = 1
-    lj = MDsimulator(n, mass, numPerRow, initial_spacing, temperature, dt, nsteps, numStepsPerFrame, startStepForAveraging)
-    lj.simulate_animate()
-    lj.plot_energy()
+    T = 1.0
+    dt = [0.01, 0.024, 0.0241, 0.02415, 0.0242, 0.0243]
+    nsteps = 20_000
+    for i in range(len(dt)):
+        lj = MDsimulator(T=T, nsteps=nsteps, dt=dt[i])
+        lj.simulate()
+        lj.plot_energy(f"Energies as a function of time, dt = {dt[i]}")
 
 if __name__ == "__main__" :
-    exercise_32a()
-# %%
+    #exercise_32a()
+    pass
+
+# %% Excerise 3.2 b)
+
+def exercise_32b():
+    T = 0.2
+    dt = 0.0001
+    nsteps = 20_000
+    lj = MDsimulator(T=T, nsteps=nsteps, dt=dt)
+    lj.simulate()
+    lj.plot_energy(f"Energies as a function of time, T = {T}")
+
+if __name__ == "__main__" :
+    exercise_32b()
