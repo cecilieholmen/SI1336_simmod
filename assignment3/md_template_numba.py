@@ -109,7 +109,9 @@ class MDsimulator:
         self.Ekin = 0
         self.Virial = 0
         self.Cv = 0
+        self.Cv_list = []
         self.P = 0
+        self.P_list = []
 
     def clear_energy_potential(self) :
         
@@ -145,14 +147,8 @@ class MDsimulator:
             (THE LATTER YOU NEED TO IMPLEMENT!)
         """
 
-        #self.vx, self.vy = md.thermalize(self.vx, self.vy, np.sqrt(self.Ekin/self.n))
-
-        for i in range(0,self.n):
-            # At the first step we alread have the "full step" velocity
-            if self.step > 0:
-                # Update the velocities with a half step
-                self.vx[i] += self.fx[i]*self.invmass*0.5*self.dt
-                self.vy[i] += self.fy[i]*self.invmass*0.5*self.dt
+        for i in range(0, self.n):
+            self.vx, self.vy = md.thermalize(self.vx, self.vy, np.sqrt(self.kBT/self.mass))
 
             # Add the kinetic energy of particle i to the total
             self.Ekin += 0.5*self.mass*(self.vx[i]*self.vx[i] + self.vy[i]*self.vy[i])
@@ -165,6 +161,25 @@ class MDsimulator:
             # Apply p.c.b. and put particles back in the unit cell
             self.x[i] = self.x[i] % self.Lx
             self.y[i] = self.y[i] % self.Ly
+
+        # for i in range(0, self.n):
+        #     # At the first step we alread have the "full step" velocity
+        #     if self.step > 0:
+        #         # Update the velocities with a half step
+        #         self.vx[i] += self.fx[i]*self.invmass*0.5*self.dt
+        #         self.vy[i] += self.fy[i]*self.invmass*0.5*self.dt
+
+        #     # Add the kinetic energy of particle i to the total
+        #     self.Ekin += 0.5*self.mass*(self.vx[i]*self.vx[i] + self.vy[i]*self.vy[i])
+        #     # Update the velocities with a half step
+        #     self.vx[i] += self.fx[i]*self.invmass*0.5*self.dt
+        #     self.vy[i] += self.fy[i]*self.invmass*0.5*self.dt
+        #     # Update the coordinates
+        #     self.x[i] += self.vx[i] * self.dt
+        #     self.y[i] += self.vy[i] * self.dt
+        #     # Apply p.c.b. and put particles back in the unit cell
+        #     self.x[i] = self.x[i] % self.Lx
+        #     self.y[i] = self.y[i] % self.Ly
 
     def md_step(self) :
 
@@ -200,6 +215,8 @@ class MDsimulator:
         self.ekinList.append(self.Ekin)
         self.epotList.append(self.Epot)
         self.etotList.append(self.Epot + self.Ekin)
+        self.Cv_list.append(self.Cv)
+        self.P_list.append(self.P)
         if self.step >= self.startStepForAveraging and self.step % N_OUTPUT_HEAT_CAP == 0:
             EkinAv  = self.sumEkin/(self.step + 1 - self.startStepForAveraging)
             EtotAv = self.sumEtot/(self.step + 1 - self.startStepForAveraging)
@@ -207,7 +224,7 @@ class MDsimulator:
             VirialAV = self.sumVirial/(self.step + 1 - self.startStepForAveraging)
             self.Cv = (Etot2Av - EtotAv * EtotAv) / (self.kBT * self.T)
             self.P = (2.0/self.area)*(EkinAv - VirialAV)
-            print('time', t, 'Cv =', self.Cv, 'P = ', self.P)
+            # print('time', t, 'Cv =', self.Cv, 'P = ', self.P)
 
     def snapshot(self, framenr=None) :
 
@@ -228,7 +245,7 @@ class MDsimulator:
         """
 
         nn = self.nsteps//self.numStepsPerFrame
-        print("Integrating for "+str(nn*self.numStepsPerFrame)+" steps...")
+        # print("Integrating for "+str(nn*self.numStepsPerFrame)+" steps...")
         for i in range(nn) :
             self.integrate_some_steps()
 
@@ -244,9 +261,9 @@ class MDsimulator:
         self.ax = plt.subplot(xlim=(0, self.Lx), ylim=(0, self.Ly))
 
         nn = self.nsteps//self.numStepsPerFrame
-        print("Integrating for "+str(nn*self.numStepsPerFrame)+" steps...") 
+        # print("Integrating for "+str(nn*self.numStepsPerFrame)+" steps...") 
         self.anim = animation.FuncAnimation(self.fig, self.snapshot,
-            frames=nn, interval=50, blit=True, repeat=False)
+            frames=nn, interval=1000, blit=False, repeat=False)
         plt.axis('square')
         plt.show()  # show the animation
         # You may want to (un)comment the following 'waitforbuttonpress', depending on your environment
@@ -268,6 +285,35 @@ class MDsimulator:
         plt.savefig(title + ".pdf")
         plt.show()
 
+    def average_energy(self) :
+        
+        """
+            Returns the average kinetic, potential and total energy
+        """
+
+        Etot_list = self.etotList[100:]
+        sum_Etot = sum(Etot_list)
+        return sum_Etot/len(Etot_list)
+
+    def average_heat_capacity(self) :
+        
+        """
+            Computes the average heat capacity
+        """
+
+        Cv_list = self.Cv_list[100:]
+        sumCv = sum(Cv_list)
+        return sumCv/len(Cv_list)
+
+    def pressure(self) :
+        
+        """
+            Computes the pressure
+        """
+        p_list = self.P_list[100:]
+        sump = sum(p_list)
+        return sump/len(p_list)
+
 
 #%% Excerise 3.2 a)
 def exercise_32a():
@@ -284,14 +330,107 @@ if __name__ == "__main__" :
     pass
 
 # %% Excerise 3.2 b)
-
 def exercise_32b():
     T = 0.2
-    dt = 0.0001
+    dt = 0.01
     nsteps = 20_000
     lj = MDsimulator(T=T, nsteps=nsteps, dt=dt)
     lj.simulate()
     lj.plot_energy(f"Energies as a function of time, T = {T}")
 
 if __name__ == "__main__" :
-    exercise_32b()
+    #exercise_32b()
+    pass
+
+# %% Excerise 3.2 c)
+def exercise_32c():
+    T = [1, 0.2]
+    nsteps = 10_000
+    for i in range(len(T)):
+        lj = MDsimulator(T=T[i], nsteps=nsteps, dt=0.01)
+        lj.simulate_animate()
+        lj.plot_energy(f"Energies as a function of time, T = {T[i]}, Andersen thermostat")
+
+if __name__ == "__main__" :
+    #exercise_32c()
+    pass
+
+# %% Excerise 3.2 d)
+def exercise_32d():
+    T = [temp for temp in np.arange(0.2, 1.2, 0.2)]
+    nsteps = 100_000
+    average_Cv = []
+    average_Etot = []
+
+    # calculate the average energy and heat capacity for each temperature 
+    for i in range(len(T)):
+        lj = MDsimulator(T=T[i], nsteps=nsteps, dt=0.01)
+        lj.simulate()
+        average_Cv.append(lj.average_heat_capacity())
+        average_Etot.append(lj.average_energy())
+
+    # plot the average energy for each temperature
+    plt.figure()
+    plt.title("Average energy as a function of temperature")
+    plt.xlabel('temperature')
+    plt.ylabel('energy')
+    plt.plot(T, average_Etot)
+    plt.legend( ('Etot') )
+    plt.grid()
+    plt.savefig("average_energy.pdf")
+    plt.show()
+
+    # plot the average heat capacity for each temperature
+    plt.figure()
+    plt.title("Average heat capacity as a function of temperature")
+    plt.xlabel('heat capacity')
+    plt.ylabel('energy')
+    plt.plot(T, average_Cv)
+    plt.legend( ('Cv') )
+    plt.grid()
+    plt.savefig("heat_capacity.pdf")
+    plt.show()
+
+if __name__ == "__main__" :
+    #exercise_32d()
+    pass
+
+# %% Excerise 3.2 e)
+def exercise_32e():
+    T = [temp for temp in np.arange(0.2, 1.2, 0.2)]
+    nsteps = 100_000
+    initial_spacing = [1.12, 2.24]
+    pressure = []
+
+    # calculate the pressure for each temperature and initial spacing
+    for i in range(len(initial_spacing)):
+        pres = []
+        for j in range(len(T)):
+            lj = MDsimulator(T=T[j], nsteps=nsteps, dt=0.01, initial_spacing=initial_spacing[i])
+            lj.simulate()
+            pres.append(lj.pressure())
+        pressure.append(pres)
+    
+    # plot the pressure for each temperature and initial spacing
+    plt.figure()
+    plt.title(f"Pressure as a function of temperature, initial spacing = {initial_spacing[0]}")
+    plt.xlabel('temperature')
+    plt.ylabel('pressure')
+    plt.plot(T, pressure[0])
+    plt.legend( ('initial spacing = 1.12') )
+    plt.grid()
+    plt.savefig("pressure1.pdf")
+    plt.show()
+
+    plt.figure()
+    plt.title(f"Pressure as a function of temperature, initial spacing = {initial_spacing[1]}")
+    plt.xlabel('temperature')
+    plt.ylabel('pressure')
+    plt.plot(T, pressure[1])
+    plt.legend( ('initial spacing = 2.24') )
+    plt.grid()
+    plt.savefig("pressure2.pdf")
+    plt.show()
+
+if __name__ == "__main__" :
+    exercise_32e()
