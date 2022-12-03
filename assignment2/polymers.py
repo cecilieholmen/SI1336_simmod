@@ -82,75 +82,59 @@ def self_avoiding_random_walk_three_directions(x_0, y_0, steps):
     random_walk_dictionary = {(x_0, y_0): 1}
     x = [x_0]
     y = [y_0]
-    for i in range(steps):
-        random_number = int(4 * random.random())
-        if random_number == 0:
-            if len(x) == 1:
-                x.append(x[-1] + 1)
-                y.append(y[-1])
-            elif len(x) > 1 and x[-1] != x[-2] + 1:
-                if (x[-1] + 1, y[-1]) in random_walk_dictionary:
-                    return False
-                else:
-                    x.append(x[-1] + 1)
-                    y.append(y[-1])
-        elif random_number == 1:
-            if len(x) == 1:
-                x.append(x[-1] - 1)
-                y.append(y[-1])
-            elif len(x) > 1 and x[-1] != x[-2] - 1:
-                if (x[-1] - 1, y[-1]) in random_walk_dictionary:
-                    return False
-                else:
-                    x.append(x[-1] - 1)
-                    y.append(y[-1])
-        elif random_number == 2:
-            if len(y) == 1:
-                x.append(x[-1])
-                y.append(y[-1] + 1)
-            elif len(x) > 1 and y[-1] != y[-2] + 1:
-                if (x[-1], y[-1] + 1) in random_walk_dictionary:
-                    return False
-                else:
-                    x.append(x[-1])
-                    y.append(y[-1] + 1)
-        elif random_number == 3:
-            if len(y) == 1:
-                x.append(x[-1])
-                y.append(y[-1] - 1)
-            elif len(x) > 1 and y[-1] != y[-2] - 1:
-                if (x[-1], y[-1] - 1) in random_walk_dictionary:
-                    return False
-                else:
-                    x.append(x[-1])
-                    y.append(y[-1] - 1)
-        else:
-            random_walk_dictionary[(x[-1], y[-1])] = 1
-    return True
-
-def self_avoiding_random_walk_E(x_0, y_0, steps):
-    random_walk_dictionary = {(x_0, y_0): 1}
-    x = [x_0]
-    y = [y_0]
-    for i in range(steps):
-        random_number = int(4 * random.random())
-        if random_number == 0:
+    last_dir = 4
+    for j in range(steps):
+        r_j = int(4 * random.random())
+        while r_j + last_dir == 1 or r_j + last_dir == 5:
+            r_j = int(4 * random.random())
+        if r_j == 0:
             x.append(x[-1] + 1)
             y.append(y[-1])
-        elif random_number == 1:
+        elif r_j == 1:
             x.append(x[-1] - 1)
             y.append(y[-1])
-        elif random_number == 2:
+        elif r_j == 2:
             x.append(x[-1])
             y.append(y[-1] + 1)
-        elif random_number == 3:
+        elif r_j == 3:
             x.append(x[-1])
             y.append(y[-1] - 1)
+        last_dir = r_j
         if (x[-1], y[-1]) in random_walk_dictionary:
-            return [[0], [0]]
+            return False
         else:
             random_walk_dictionary[(x[-1], y[-1])] = 1
-    return [x, y]
+    return True 
+
+def self_avoiding_random_walk_E(x_0, y_0, steps):
+    while True:
+        random_walk_dictionary = {(x_0, y_0): 1}
+        x = [x_0]
+        y = [y_0]
+        last_dir = 4
+        for j in range(steps):
+            r_j = int(4 * random.random())
+            while r_j + last_dir == 1 or r_j + last_dir == 5:
+                r_j = int(4 * random.random())
+            if r_j == 0:
+                x.append(x[-1] + 1)
+                y.append(y[-1])
+            elif r_j == 1:
+                x.append(x[-1] - 1)
+                y.append(y[-1])
+            elif r_j == 2:
+                x.append(x[-1])
+                y.append(y[-1] + 1)
+            elif r_j == 3:
+                x.append(x[-1])
+                y.append(y[-1] - 1)
+            last_dir = r_j
+            if (x[-1], y[-1]) in random_walk_dictionary:
+                break
+            else:
+                random_walk_dictionary[(x[-1], y[-1])] = 1
+        else:
+            return [x, y]
 
 def plot_random_walk_2d(walk, steps):
     plt.clf()
@@ -295,7 +279,9 @@ def exercise_21d():
     success = 0
     number_walks = 10000
     success_list = []
+    not_success_list = []
     success_list_improved = []
+    not_success_list_improved = []
     steps_list = [steps for steps in range(1, 100)]
     for steps in steps_list:
         success = 0
@@ -305,14 +291,14 @@ def exercise_21d():
                 success += 1
             if self_avoiding_random_walk_three_directions(initial_position[0], initial_position[1], steps) == True:
                 success_improved += 1
-        success_list.append(success)
-        success_list_improved.append(success_improved)
+        success_list.append(success / number_walks)
+        success_list_improved.append(success_improved / number_walks)
     
     plt.clf()
     plt.title(f'Self Avoiding Random Walk, {number_walks} walks', fontdict = {'fontsize' : 15})
     plt.plot(steps_list, success_list, "-x", label="Successful walks")
     plt.xlabel("Number of steps, N", fontsize = 15)
-    plt.ylabel(f"Number of successfull walks", fontsize = 15)
+    plt.ylabel(f"Success rate", fontsize = 15)
     plt.legend(fontsize = 10)
     plt.savefig(f"Random_Walk_Self_Avoiding.png")
     plt.grid()
@@ -338,7 +324,7 @@ def exercise_21d():
     plt.plot(steps_list, success_list_improved, "-x", label="Successful walks, improved algorithm")
     plt.plot(steps_list, success_list, "-x", label="Successful walks")
     plt.xlabel("Number of steps, N", fontsize = 15)
-    plt.ylabel(f"Number of successfull walks", fontsize = 15)
+    plt.ylabel(f"Success rate", fontsize = 15)
     plt.legend(fontsize = 10)
     plt.savefig(f"Random_Walk_Self_Avoiding_Improved.png")
     plt.grid()
@@ -346,13 +332,14 @@ def exercise_21d():
 
 if __name__ == '__main__':
     exercise_21d()
+    
 # %% Exercise 2.1 e)
 # Compute the root mean square end-to-end distances for the self-avoiding random walk for the range of N that you can cover.
 
 def exercise_21e():
     initial_position = [0, 0]
     steps_list = [steps for steps in range(1, 40)]
-    number_walks = 1000
+    number_walks = 10_000
     rmsd_list_1 = []
     rmsd_list_2 = []
 
@@ -361,10 +348,11 @@ def exercise_21e():
         r2_list_2 = []
 
         for i in range(number_walks):
-            random_walk_1 = self_avoiding_random_walk_E(initial_position[0], initial_position[1], steps)
-            r2_list_1.append(distance_r(random_walk_1) ** 2)
             random_walk_2 = random_walk_2d(initial_position[0], initial_position[1], steps)
             r2_list_2.append(distance_r(random_walk_2) ** 2)
+            random_walk_1 = self_avoiding_random_walk_E(initial_position[0], initial_position[1], steps)
+            r2_list_1.append(distance_r(random_walk_1) ** 2)
+                
 
         rmsd_list_1.append(np.sqrt(np.sum(r2_list_1) / number_walks))
         rmsd_list_2.append(np.sqrt(np.sum(r2_list_2) / number_walks))
@@ -382,5 +370,3 @@ def exercise_21e():
 if __name__ == '__main__':
     #exercise_21e()
     pass
-
-# %%
