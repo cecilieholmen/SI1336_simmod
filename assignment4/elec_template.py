@@ -1,28 +1,35 @@
+# %% Imports
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
-L = 25
+# %% Global variables
 
-# The grid is n+1 points along x and y, including boundary points 0 and n
-n = 25
+L = 10
 
 # The grid spacing is L/n
+delta_x = 1
+delta_y = delta_x
+
+# The grid is n+1 points along x and y, including boundary points 0 and n
+n = int(L/delta_x)
 
 # The number of iterations
-nsteps = 100
+nsteps = 1500
 
 # Initialize the grid to 0
-v = np.zeros((n+1, n+1))
+v = 8.75 * 0.9 * np.ones((n+1, n+1))
 vnew = np.zeros((n+1, n+1))
+v_exact = 8.75 * np.ones((n+1, n+1)) 
 
-# Set the boundary conditions
-for i in range(1,n):
-    v[0,i] = 10
-    v[n,i] = 10
-    v[i,0] = 10
-    v[i,n] = 10
+# %% Set the boundary conditions
+v[0,:] = 10
+v[n,:] = 10
+v[:,0] = 10
+v[:,n] = 5
+#v[n//2, n//2] = 4
 
+# %% Create the plot
 fig = plt.figure()
 ax = fig.add_subplot(111)
 im = ax.imshow(v, cmap=None, interpolation='nearest')
@@ -37,7 +44,7 @@ def relax(n, v, checker):
         for x in range(1,n):
             for y in range(1,n):
                 if (x*(n+1) + y) % checker == check:
-                    vnew[x,y] = (v[x-1][y] + v[x+1][y] + v[x][y-1] + v[x][y+1])*0.25 + 2*np.pi*1
+                    vnew[x,y] = (v[x-1][y] + v[x+1][y] + v[x][y-1] + v[x][y+1])*0.25 #+ 2*np.pi*1
 
         # Copy back the new values to v
         # Note that you can directly store in v instead of vnew with Gauss-Seidel or checkerboard
@@ -47,7 +54,6 @@ def relax(n, v, checker):
                     v[x,y] = vnew[x,y]
 
 def update(step):
-    print(step)
     global n, v, checker
 
     # FuncAnimation calls update several times with step=0,
@@ -56,6 +62,13 @@ def update(step):
     if step > 0:
         relax(n, v, checker)
 
+    # get the max error
+    
+    #err = np.max(np.abs(v - v_exact)/v_exact)
+    err = np.abs(v[5, 5] - v_exact[5, 5])/v_exact[5, 5]
+    p = True if err < 0.01 else None
+    print(f'Error at step {step}: {err:.3f} {p}')
+
     im.set_array(v)
     return im,
 
@@ -63,3 +76,12 @@ def update(step):
 anim = animation.FuncAnimation(fig, update, frames=nsteps+1, interval=200, blit=True, repeat=False)
 plt.show()
 
+# %% Plot the equipotential surfaces
+plt.figure()
+plt.title(f'Equipotential surfaces, n={n}, nsteps={nsteps}')
+plt.contour(v, 10)
+plt.savefig(f'elec_contour_n{n}_3.png')
+plt.show()
+
+
+# %%
