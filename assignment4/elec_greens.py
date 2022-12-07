@@ -18,7 +18,7 @@ n = int(L/delta_x)
 nsteps = 100
 
 # The number of walkers
-nwalkers = 200
+nwalkers = 10_000
 
 # Initialize the grid to 0
 v = np.zeros((n+1, n+1))
@@ -91,3 +91,31 @@ for x in range(n+1):
         G2[x, y] = g_list[0][1]
         G3[x, y] = g_list[0][2]
         G4[x, y] = g_list[0][3]
+
+plt.figure()
+plt.contourf(G1)
+plt.colorbar()
+plt.title('G1')
+plt.savefig('G1.png')
+plt.show()
+
+plt.figure()
+plt.contourf(G2)
+plt.colorbar()
+plt.title('G2')
+plt.savefig('G2.png')
+plt.show()
+
+plt.figure()
+plt.contourf(G3)
+plt.colorbar()
+plt.title('G3')
+plt.savefig('G3.png')
+plt.show()
+
+plt.figure()
+plt.contourf(G4)
+plt.colorbar()
+plt.title('G4')
+plt.savefig('G4.png')
+plt.show()
