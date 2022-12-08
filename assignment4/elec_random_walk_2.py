@@ -64,7 +64,7 @@ def update_plot_v(step, walks, xy):
 
 nwalks_list = [walks for walks in np.geomspace(100, nwalkers, 20, dtype=int)]
 v_list = []
-xy_list = [[1, 4], [7, 4], [4, 8]]
+xy_list = [[1, 4], [4, 4], [7, 4], [4, 8]]
 
 for i in range(len(xy_list)):
     xy = xy_list[i]
@@ -74,10 +74,10 @@ for i in range(len(xy_list)):
     v_list.append(v_list_xy)
 
 plt.figure()
-plt.plot(nwalks_list, v_list[0], '-x', nwalks_list, v_list[1], '-x', nwalks_list, v_list[2], '-x')
+plt.plot(nwalks_list, v_list[0], '-x', nwalks_list, v_list[1], '-x', nwalks_list, v_list[2], '-x', nwalks_list, v_list[3], '-x')
 plt.xlabel('Number of walks')
 plt.ylabel('Potential')
-plt.legend(['(1, 4)', '(7, 4)', '(4, 8)'])
+plt.legend(['(1, 4)', '(7, 4)', '(4, 8)', '(4, 4)'])
 plt.grid()
 plt.savefig('elec_random_walk_2.png')
 plt.show()
