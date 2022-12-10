@@ -26,7 +26,7 @@ v_exact = 8.75 * np.ones((n+1, n+1))
 v[0,:] = 10
 v[n,:] = 10
 v[:,0] = 10
-v[:,n] = 5
+v[:,n] = 0
 #v[n//2, n//2] = 4
 
 # %% Create the plot
@@ -75,6 +75,7 @@ def update(step):
 # we generate nsteps+1 frames, because frame=0 is skipped (see above)
 anim = animation.FuncAnimation(fig, update, frames=nsteps+1, interval=200, blit=True, repeat=False)
 plt.show()
+
 
 # %% Plot the equipotential surfaces
 plt.figure()
