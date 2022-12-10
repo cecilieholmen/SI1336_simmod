@@ -29,6 +29,34 @@ v[n,:] = 10
 v[:,0] = 5
 v[:,n] = 5
 
+# Three on the left side, one on the top and one on the bottom
+# v[3, 0] = 20
+# v[3, n] = 20
+# v[0, 4] = 20
+# v[0, 5] = 20
+# v[0, 6] = 20
+
+# All on the left side
+# v[0, 3] = 20
+# v[0, 4] = 20
+# v[0, 5] = 20
+# v[0, 6] = 20
+# v[0, 7] = 20
+
+# All on the bottom
+# v[3, 0] = 20
+# v[4, 0] = 20
+# v[5, 0] = 20
+# v[6, 0] = 20
+# v[7, 0] = 20
+
+# Three on the bottom, one on the left and one on the right
+# v[3, 0] = 20
+# v[3, n] = 20
+# v[0, 4] = 20
+# v[0, 5] = 20
+# v[0, 6] = 20
+
 # %% Create the plot
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -91,6 +119,14 @@ for x in range(n+1):
         G2[x, y] = g_list[0][1]
         G3[x, y] = g_list[0][2]
         G4[x, y] = g_list[0][3]
+
+# Calculate v(x,y) from G(x,y) in the site (3, 5)
+# v[3, 5] = (G1[3, 5] * 10 + G2[3, 5] * 10 + G3[3, 5] * 5 + G4[3, 5] * 5) / nwalkers
+# print(v[3, 5])
+
+# Calculate v(x,y) from G(x,y) in the site (5, 3)
+v[5, 3] = (G1[5, 3] * 10 + G2[5, 3] * 10 + G3[5, 3] * 5 + G4[5, 3] * 5) / nwalkers
+print(v[5, 3])
 
 plt.figure()
 plt.contourf(G1)
