@@ -1,0 +1,74 @@
+[
+    {
+        "name": "Sun",
+        "color": "yellow",
+        "mass": 1989100,
+        "position": [0, 0],
+        "velocity": [0, 0],
+        "acceleration": [0, 0]
+    },
+    {
+        "name": "Mercury",
+        "color": "gray",
+        "mass": 0.33011,
+        "position": [57909227, 0],
+        "velocity": [0, 47.36203],
+        "acceleration": [0, 0]
+    },
+    {
+        "name": "Venus",
+        "color": "orange",
+        "mass": 4.8675,
+        "position": [108209475, 0],
+        "velocity": [0, 35.02044],
+        "acceleration": [0, 0]
+    },
+    {
+        "name": "Earth",
+        "color": "blue",
+        "mass": 5.97237,
+        "position": [149598262, 0],
+        "velocity": [0, 29.78398],
+        "acceleration": [0, 0]
+    },
+    {
+        "name": "Mars",
+        "color": "red",
+        "mass": 0.64171,
+        "position": [227943824, 0],
+        "velocity": [0, 24.1301],
+        "acceleration": [0, 0]
+    },
+    {
+        "name": "Jupiter",
+        "color": "brown",
+        "mass": 1898.13,
+        "position": [778340821, 0],
+        "velocity": 13.07082,
+        "acceleration": [0, 0]
+    },
+    {
+        "name": "Saturn",
+        "color": "tan",
+        "mass": 568.34,
+        "position": [1426666422, 0],
+        "velocity": [0, 9.69063],
+        "acceleration": [0, 0]
+    },
+    {
+        "name": "Uranus",
+        "color": "lightblue",
+        "mass": 86.813,
+        "position": [2870658186, 0],
+        "velocity": [0, 6.81444],
+        "acceleration": [0, 0]
+    },
+    {
+        "name": "Neptune",
+        "color": "darkblue",
+        "mass": 102.413,
+        "position": [4498396441, 0],
+        "velocity": [0, 5.43502],
+        "acceleration": [0, 0]
+    }
+]
