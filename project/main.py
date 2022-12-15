@@ -166,13 +166,13 @@ class Simulation:
     # Plot the animation of the solar system using matplotlib and the observables
     def plot_simulation(self) -> None:
         fig = plt.figure()
-        size = 649839644
+        size = 6498396440
         ax = plt.axes(xlim=(-size, size), ylim=(-size, size))
         #ax = plt.axes()
         ax.set_aspect("equal")
         ax.grid()
-        ax.set_xlabel("x [10^7 km]")
-        ax.set_ylabel("y [10^7 km]")
+        ax.set_xlabel("x [km]")
+        ax.set_ylabel("y [km]")
         ax.set_title("The solar system")
 
         lines = []
@@ -188,7 +188,7 @@ class Simulation:
         def animate(i):
             self.integrator.integrate(self.solar_system, self.obs)
             for line, body in zip(lines, self.solar_system.bodies):
-                line.set_data(body.position[0], body.position[1] / (10 ** 7))
+                line.set_data(body.position[0], body.position[1])
             return lines
 
         anim = animation.FuncAnimation(
