@@ -5,6 +5,8 @@
         "mass": 1989100,
         "position": [0, 0],
         "velocity": [0, 0],
+        "orbital_velocity": 0,
+        "orbital_eccentricity": 0,
         "acceleration": [0, 0]
     },
     {
@@ -13,6 +15,8 @@
         "mass": 0.33011,
         "position": [57909227, 0],
         "velocity": [0, 47.36203],
+        "orbital_velocity": 47.36203,
+        "orbital_eccentricity": 0.206,
         "acceleration": [0, 0]
     },
     {
@@ -21,6 +25,8 @@
         "mass": 4.8675,
         "position": [108209475, 0],
         "velocity": [0, 35.02044],
+        "orbital_velocity": 35.02044,
+        "orbital_eccentricity": 0.007,  
         "acceleration": [0, 0]
     },
     {
@@ -29,6 +35,8 @@
         "mass": 5.97237,
         "position": [149598262, 0],
         "velocity": [0, 29.78398],
+        "orbital_velocity": 29.78398,
+        "orbital_eccentricity": 0.017,
         "acceleration": [0, 0]
     },
     {
@@ -37,6 +45,8 @@
         "mass": 0.64171,
         "position": [227943824, 0],
         "velocity": [0, 24.1301],
+        "orbital_velocity": 24.1301,
+        "orbital_eccentricity": 0.094,
         "acceleration": [0, 0]
     },
     {
@@ -44,7 +54,9 @@
         "color": "brown",
         "mass": 1898.13,
         "position": [778340821, 0],
-        "velocity": 13.07082,
+        "velocity": [0, 13.07082],
+        "orbital_velocity": 13.07082,
+        "orbital_eccentricity": 0.049,
         "acceleration": [0, 0]
     },
     {
@@ -53,6 +65,8 @@
         "mass": 568.34,
         "position": [1426666422, 0],
         "velocity": [0, 9.69063],
+        "orbital_velocity": 9.69063,
+        "orbital_eccentricity": 0.052,
         "acceleration": [0, 0]
     },
     {
@@ -61,6 +75,8 @@
         "mass": 86.813,
         "position": [2870658186, 0],
         "velocity": [0, 6.81444],
+        "orbital_velocity": 6.81444,
+        "orbital_eccentricity": 0.047,
         "acceleration": [0, 0]
     },
     {
@@ -69,6 +85,8 @@
         "mass": 102.413,
         "position": [4498396441, 0],
         "velocity": [0, 5.43502],
+        "orbital_velocity": 5.43502,
+        "orbital_eccentricity": 0.010,
         "acceleration": [0, 0]
     }
 ]
