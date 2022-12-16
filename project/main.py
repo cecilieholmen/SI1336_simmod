@@ -26,11 +26,9 @@ class Body:
         name: str,
         color: str,
         mass: float,
-        position: ndarray = np.array([0, 0]),
-        velocity: ndarray = np.array([0, 0]),
-        #orbital_velocity: float = 0,
-        #orbital_eccentricity: float = 0,
-        acceleration: ndarray = np.array([0, 0]),
+        position: ndarray = np.array([0, 0, 0]),
+        velocity: ndarray = np.array([0, 0, 0]),
+        acceleration: ndarray = np.array([0, 0, 0]),
         time: float = 0,
     ) -> None:
         self.name = name
@@ -39,18 +37,8 @@ class Body:
         self.mass = mass
         self.position = position
         self.velocity = velocity
-        #self.velocity = orbital_velocity * np.array([np.cos(orbital_eccentricity), np.sin(orbital_eccentricity)]) # [km/s]
-        #self.acceleration = np.mean(np.sqrt(velocity)) / np.sqrt(np.mean(np.sqrt(position)))  # a_cent = v^2 / r
         self.acceleration = acceleration
 
-    #     self.kinetic_energy = self.kinetic_energy()
-    #     self.momentum = self.momentum()
-
-    # def kinetic_energy(self) -> float:
-    #     return 0.5 * self.mass * np.sum(np.square(self.velocity))
-
-    # def momentum(self) -> ndarray:
-    #     return self.mass * self.velocity
 
 class SolarSystem:
 
@@ -83,6 +71,10 @@ class Observables:
         self.positions = []  # list to store positions
         self.velocities = []  # list to store velocities
 
+        self.kinetic_energy = []  # list to store kinetic energy
+        self.potential_energy = []  # list to store potential energy
+        self.total_energy = []  # list to store total energy
+
 # %% Integrators
 class BaseIntegrator(ABC):
 
@@ -104,12 +96,21 @@ class BaseIntegrator(ABC):
 
         positions = []
         velocities = []
+        kinetic_energy = []
+        potential_energy = []
+        total_energy = []
         for body in solar_system.bodies:
             positions.append(body.position)
             velocities.append(body.velocity)
+            kinetic_energy.append(0.5 * body.mass * np.sum(np.square(body.velocity)))
+            potential_energy.append(-G * body.mass * solar_system.bodies[0].mass / np.sqrt(np.sum(np.square(body.position - solar_system.bodies[0].position))))
+            total_energy.append(kinetic_energy[-1] + potential_energy[-1])
             
         obs.positions.append(positions)
         obs.velocities.append(velocities)
+        obs.kinetic_energy.append(kinetic_energy)
+        obs.potential_energy.append(potential_energy)
+        obs.total_energy.append(total_energy)
 
 
 class EulerCromerIntegrator(BaseIntegrator):
@@ -166,9 +167,8 @@ class Simulation:
     # Plot the animation of the solar system using matplotlib and the observables
     def plot_simulation(self) -> None:
         fig = plt.figure()
-        size = 6498396440
+        size = 64983964400
         ax = plt.axes(xlim=(-size, size), ylim=(-size, size))
-        #ax = plt.axes()
         ax.set_aspect("equal")
         ax.grid()
         ax.set_xlabel("x [km]")
@@ -209,14 +209,12 @@ bodies = [
         mass=data["mass"] * 10 ** 24,
         position=np.array(data["position"], dtype=np.float64) * 10 ** 7,
         velocity=np.array(data["velocity"], dtype=np.float64),
-        #orbital_velocity=data["orbital_velocity"],
-        #orbital_eccentricity=data["orbital_eccentricity"],
         acceleration=np.array(data["acceleration"], dtype=np.float64),
     ) for data in json.load(open('/Users/cecilie/Desktop/Skrivbord – Cecilies MacBook Air/Universitet/tredje/simmod/project/planet_data.json'))
 ]
 
 sys = SolarSystem(bodies, start_time)
-integrator = EulerCromerIntegrator(dt=100_000)
+integrator = EulerCromerIntegrator(dt=100_000_000)
 obs = Observables()
 sim = Simulation(sys, integrator, number_of_steps_per_frame=1, steps=100_000_000_000_000, obs=obs)
 sim.plot_simulation()
