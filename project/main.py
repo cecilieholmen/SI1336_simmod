@@ -102,9 +102,10 @@ class BaseIntegrator(ABC):
         for body in solar_system.bodies:
             positions.append(body.position)
             velocities.append(body.velocity)
-            kinetic_energy.append(0.5 * body.mass * np.sum(np.square(body.velocity)))
-            potential_energy.append(-G * body.mass * solar_system.bodies[0].mass / np.sqrt(np.sum(np.square(body.position - solar_system.bodies[0].position))))
-            total_energy.append(kinetic_energy[-1] + potential_energy[-1])
+            if body.name != 'Sun':
+                kinetic_energy.append(0.5 * body.mass * np.sum(np.square(body.velocity)))
+                potential_energy.append(-G * body.mass * solar_system.bodies[0].mass / np.sqrt(np.sum(np.square(body.position - solar_system.bodies[0].position))))
+                total_energy.append(kinetic_energy[-1] + potential_energy[-1])
             
         obs.positions.append(positions)
         obs.velocities.append(velocities)
@@ -201,7 +202,7 @@ class Simulation:
 # Run simulation
 start_time = 0
 
-# Source data: https://nssdc.gsfc.nasa.gov/planetary/factsheet/ (mass), https://ssd.jpl.nasa.gov/horizons/app.html#/ (position, velocity) (82459928.500000000 = A.D. 2022-Dec-15 00:00:00.0000 TDB)
+# Source data: https://ssd.jpl.nasa.gov/horizons/app.html#/ (mass, position, velocity) (82459928.500000000 = A.D. 2022-Dec-15 00:00:00.0000 TDB)
 bodies = [
     Body(
         name=data["name"],
@@ -209,7 +210,6 @@ bodies = [
         mass=data["mass"] * 10 ** 24,
         position=np.array(data["position"], dtype=np.float64) * 10 ** 7,
         velocity=np.array(data["velocity"], dtype=np.float64),
-        acceleration=np.array(data["acceleration"], dtype=np.float64),
     ) for data in json.load(open('/Users/cecilie/Desktop/Skrivbord – Cecilies MacBook Air/Universitet/tredje/simmod/project/planet_data.json'))
 ]
 
