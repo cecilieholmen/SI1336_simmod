@@ -1,8 +1,7 @@
-# Imports
+# %% Imports
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import animation
 
 # Global variables
 L = 10
@@ -23,34 +22,20 @@ nwalkers = 10_000
 # Initialize the grid to 0
 v = np.zeros((n+1, n+1))
 
-# %% Set the boundary conditions
-v[0,:] = 10
-v[n,:] = 10
-v[:,0] = 5
-v[:,n] = 5
+# Set the boundary conditions
+v[0, :] = 10
+v[n, :] = 10
+v[:, 0] = 5
+v[:, n] = 5
 
-# Three on the left side, one on the top and one on the bottom
+# All on the left side (should give max for 5,3)
 # v[3, 0] = 20
-# v[3, n] = 20
-# v[0, 4] = 20
-# v[0, 5] = 20
-# v[0, 6] = 20
-
-# All on the left side
-# v[0, 3] = 20
-# v[0, 4] = 20
-# v[0, 5] = 20
-# v[0, 6] = 20
-# v[0, 7] = 20
-
-# All on the bottom
-# v[3, 0] = 20
+# v[7, 0] = 20
 # v[4, 0] = 20
 # v[5, 0] = 20
 # v[6, 0] = 20
-# v[7, 0] = 20
 
-# Three on the bottom, one on the left and one on the right
+# Three on the top, one on the left and one on the right (should give max for 3,5)
 # v[3, 0] = 20
 # v[3, n] = 20
 # v[0, 4] = 20
@@ -63,71 +48,57 @@ ax = fig.add_subplot(111)
 im = ax.imshow(v, cmap=None, interpolation='nearest')
 fig.colorbar(im)
 
-# Green's function
-G1 = np.zeros((n+1, n+1))
-G2 = np.zeros((n+1, n+1))
-G3 = np.zeros((n+1, n+1))
-G4 = np.zeros((n+1, n+1))
+# %% Green's function
+G1 = np.zeros_like(v)
+G2 = np.zeros_like(v)
+G3 = np.zeros_like(v)
+G4 = np.zeros_like(v)
 
-# perform one step of relaxation
-def random_walk_of_laplace(n, v, x, y):
+def random_walk_of_laplace(n, v, x0, y0):
     sides = np.zeros(4)
     for i in range(nwalkers):
-        x1 = x
-        y1 = y
+        x = x0
+        y = y0
         while True:
             random_number = int(4 * random.random())
             if random_number == 0:
-                x1 += 1
+                x += 1
             elif random_number == 1:
-                x1 -= 1
+                x -= 1
             elif random_number == 2:
-                y1 += 1
+                y += 1
             elif random_number == 3:
-                y1 -= 1
-            if x1 == 0 or x1 == n or y1 == 0 or y1 == n:
-                if x1 == 0:
-                    sides[0] += 1
-                elif x1 == n:
-                    sides[1] += 1
-                elif y1 == 0:
-                    sides[2] += 1
-                elif y1 == n:
-                    sides[3] += 1
+                y -= 1
+            if x == 0 or x == n or y == 0 or y == n:
+                if x == 0:
+                    sides[0] += v[x, y]
+                elif x == n:
+                    sides[1] += v[x, y]
+                elif y == 0:
+                    sides[2] += v[x, y]
+                elif y == n:
+                    sides[3] += v[x, y]
                 break
-    return sides
+    return sides / nwalkers
 
-def update(step, xy):
-    global n, v, G
-
-    x = xy[0]
-    y = xy[1]
-    g_list = []
-
-    if step > 0:
+for x in range(1, n):
+    for y in range(1, n):
         random_walk = random_walk_of_laplace(n, v, x, y)
-        g_list.append(random_walk)
-    
-    return g_list 
-
-
-for x in range(n+1):
-    for y in range(n+1):
-        xy = [x, y]
-        g_list = update(nsteps, xy)
-        G1[x, y] = g_list[0][0]
-        G2[x, y] = g_list[0][1]
-        G3[x, y] = g_list[0][2]
-        G4[x, y] = g_list[0][3]
+        G1[x, y] = random_walk[0]
+        G2[x, y] = random_walk[1]
+        G3[x, y] = random_walk[2]
+        G4[x, y] = random_walk[3]
 
 # Calculate v(x,y) from G(x,y) in the site (3, 5)
-# v[3, 5] = (G1[3, 5] * 10 + G2[3, 5] * 10 + G3[3, 5] * 5 + G4[3, 5] * 5) / nwalkers
-# print(v[3, 5])
+v[3, 5] = (G1[3, 5] + G2[3, 5] + G3[3, 5] + G4[3, 5])
+print(f"v(3, 5) = {v[3, 5]}")
 
 # Calculate v(x,y) from G(x,y) in the site (5, 3)
-v[5, 3] = (G1[5, 3] * 10 + G2[5, 3] * 10 + G3[5, 3] * 5 + G4[5, 3] * 5) / nwalkers
-print(v[5, 3])
+v[5, 3] = (G1[5, 3] + G2[5, 3] + G3[5, 3] + G4[5, 3])
+print(f"v(5, 3) = {v[5, 3]}")
 
+# %% 
+# Plot the results
 plt.figure()
 plt.contourf(G1)
 plt.colorbar()
