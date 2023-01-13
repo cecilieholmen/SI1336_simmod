@@ -2,82 +2,73 @@
     {
         "name": "Sun",
         "color": "yellow",
-        "mass": 1988500,
-        "position": [-0.1356747758524117, 0.003713810370672708, 0.003129999294321321],
-        "velocity": [0.001247367948342418, -0.01563693990003745, 0.0001003748878003648],
-        "orbital_velocity": 0,
-        "orbital_eccentricity": 0
+        "mass": 1989100e24,
+        "position": [0, 0, 0],
+        "velocity": [0, 0, 0],
+        "acceleration": [0, 0, 0]
     },
     {
         "name": "Mercury",
         "color": "gray",
-        "mass": 0.3302,
-        "position": [5.131696438102935, -2.250230903292691, -0.6642110066925752],
-        "velocity": [9.661564620721144, 46.97191009895332, 2.953821601387869],
-        "orbital_velocity": 47.36203,
-        "orbital_eccentricity": 0.206
+        "mass": 0.330e24,
+        "position": [57.9e6, 0, 0],
+        "velocity": [0, 47.4, 0],
+        "acceleration": [0, 0, 0]
     },
     {
         "name": "Venus",
         "color": "orange",
-        "mass": 4.8685,
-        "position": [4.226494244906808, -9.967484526706165, -0.3854694291595474],
-        "velocity": [31.84943421418730, 13.90312006098391, -1.646531846654270],
-        "orbital_velocity": 35.02044,
-        "orbital_eccentricity": 0.007 
+        "mass": 4.87e24,
+        "position": [108.2e6, 0, 0],
+        "velocity": [0, 35.0, 0],
+        "acceleration": [0, 0, 0]
     },
     {
         "name": "Earth",
         "color": "blue",
-        "mass": 5.97219,
-        "position": [1.746810636173182, 14.60836237301090, 0.002324562989669293],
-        "velocity": [-30.02261145974848, 3.689792473705750, 0.0005503994216122798],
-        "orbital_velocity": 29.78398,
-        "orbital_eccentricity": 0.017
+        "mass": 5.97e24,
+        "position": [149598262, 0, 0],
+        "velocity": [0, 29.8, 0],
+        "acceleration": [0, 0, 0]
     },
     {
         "name": "Mars",
         "color": "red",
-        "mass": 0.64171,
-        "position": [4.173098448479439, 22.67874571659094, 0.3726648092759743],
-        "velocity": [-22.88433103665633, 6.567272291027285, 0.6994374916186570],
-        "orbital_velocity": 24.1301,
-        "orbital_eccentricity": 0.094
+        "mass": 0.642e24,
+        "position": [228.0e6, 0, 0],
+        "velocity": [0, 24.1, 0],
+        "acceleration": [0, 0, 0]
     },
     {
         "name": "Jupiter",
         "color": "brown",
-        "mass": 1898.18722,
-        "position": [72.64564917197769, 13.66694889741265, -1.681977246375526],
-        "velocity": [-2.564803202495924, 13.45435474842029, 0.001595387364722534],
-        "orbital_velocity": 13.07082,
-        "orbital_eccentricity": 0.049
+        "mass": 1898e24,
+        "position": [778.5e6, 0, 0],
+        "velocity": [0, 13.1, 0],
+        "acceleration": [0, 0, 0]
     },
     {
         "name": "Saturn",
         "color": "tan",
-        "mass": 568.34, 
-        "position": [121.0267064915048, -83.52280193456414, -3.366365173213041],
-        "velocity": [4.946956609759956, 7.930799974281678, -0.3345635057031577],
-        "orbital_velocity": 9.69063,
-        "orbital_eccentricity": 0.052
+        "mass": 568e24,
+        "position": [1432.0e6, 0, 0],
+        "velocity": [0, 9.7, 0],
+        "acceleration": [0, 0, 0]
     },
     {
         "name": "Uranus",
         "color": "lightblue",
-        "mass": 86.813,
-        "position": [200.6131592795786, 215.1929794199417, -1.799742696743655],
-        "velocity": [-5.030806409894290, 4.326387237105409, 0.08131301852576867],
-        "orbital_velocity": 6.81444,
-        "orbital_eccentricity": 0.047
+        "mass": 86.8e24,
+        "position": [2867.0e6, 0, 0],
+        "velocity": [0, 6.8, 0],
+        "acceleration": [0, 0, 0]
     },
     {
         "name": "Neptune",
         "color": "darkblue",
-        "mass": 102.409,
-        "position": [445.0066669270681, -44.82156694174995, -9.332600952869937],
-        "velocity": [0.5085666238401423, 5.440095858778758, -0.1236828834248884],
-        "orbital_velocity": 5.43502,
-        "orbital_eccentricity": 0.010
+        "mass": 102e24,
+        "position": [4515.0e6, 0, 0],
+        "velocity": [0, 5.4, 0],
+        "acceleration": [0, 0, 0]
     }
 ]
