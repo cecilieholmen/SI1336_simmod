@@ -139,21 +139,9 @@ class VelocityVerletIntegrator(BaseIntegrator):
     def timestep(self, solar_system) -> None:
         solar_system.forces()
         for body in solar_system.bodies:
+            acceleration = body.acceleration
             body.position = body.position + body.velocity * self.dt + 0.5 * body.acceleration * self.dt ** 2
-            body.velocity = body.velocity + 0.5 * (body.acceleration + solar_system.acceleration) * self.dt
-
-
-class RungeKuttaIntegrator(BaseIntegrator):
-
-    def timestep(self, solar_system) -> None:
-        solar_system.forces()
-        for body in solar_system.bodies:
-            k1 = body.acceleration
-            k2 = (body.acceleration + k1 * self.dt / 2) / (self.dt / 2)
-            k3 = (body.acceleration + k2 * self.dt / 2) / (self.dt / 2)
-            k4 = (body.acceleration + k3 * self.dt) / self.dt
-            body.velocity = body.velocity + (k1 + 2 * k2 + 2 * k3 + k4) * self.dt / 6
-            body.position = body.position + body.velocity * self.dt
+            body.velocity = body.velocity + 0.5 * (body.acceleration + acceleration) * self.dt
 
 
 class LeapFrogIntegrator(BaseIntegrator):
