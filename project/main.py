@@ -10,6 +10,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import tqdm
 
 from numpy import ndarray
 from typing import List
@@ -22,7 +23,7 @@ G = 6.6740831 * (10 ** (-20))  # Gravitational constant [km^3 kg^-1 s^-2]
 class Body:
 
     def __init__(
-        self,
+        self, 
         name: str,
         color: str,
         mass: float,
@@ -66,15 +67,16 @@ class SolarSystem:
 
 class Observables:
 
-    def __init__(self, solar_system: SolarSystem) -> None:
+    def __init__(self, solar_system: SolarSystem, nsteps: int) -> None:
         self.names = [body.name for body in solar_system.bodies]  # names
         self.colors = [body.color for body in solar_system.bodies]  # colors
-        self.time = []  # list to store time
-        self.positions = []  # list to store positions
-        self.velocities = []  # list to store velocities
-        self.kinetic_energy = []  # list to store kinetic energies
-        self.potential_energy = []  # list to store potential energies
-        self.total_energy = []  # list to store total energies
+        nbodies = len(solar_system.bodies)  # number of bodies
+        self.time = np.zeros(nsteps)  # array to store time
+        self.positions = np.zeros((nsteps, nbodies, 3))  # array to store positions
+        self.velocities = np.zeros((nsteps, nbodies, 3))  # array to store velocities
+        self.kinetic_energy = np.zeros((nsteps, nbodies))  # array to store kinetic energies
+        self.potential_energy = np.zeros((nsteps, nbodies))  # array to store potential energies
+        self.total_energy = np.zeros((nsteps, nbodies))  # array to store total energies
 
 
 # %% Integrators
@@ -88,7 +90,7 @@ class BaseIntegrator(ABC):
         """Virtual method: implemented by the child classes"""
         return NotImplementedError
 
-    def integrate(self, solar_system, obs) -> None:
+    def integrate(self, solar_system: SolarSystem, obs: Observables, current_step: int) -> None:
         """Perform a single integration step"""
         # calculate energies before integrating
 
@@ -96,14 +98,11 @@ class BaseIntegrator(ABC):
 
         # Append time observables to their lists
         solar_system.time += self.dt
-        obs.time.append(solar_system.time)
+        obs.time[current_step] = solar_system.time
 
-        positions = []
-        velocities = []
-        potential_energies = []
-        kinetic_energies = []
-        total_energies = []
-        for body in solar_system.bodies:
+
+
+        for body_index, body in enumerate(solar_system.bodies):
             kinetic = 0.5 * body.mass * np.sum(np.square(body.velocity))
             potential = 0
             for other in solar_system.bodies:
@@ -112,17 +111,11 @@ class BaseIntegrator(ABC):
                 r = other.position - body.position
                 potential = potential - G * body.mass * other.mass / np.sqrt(np.sum(np.square(r)))
 
-            positions.append(body.position)
-            velocities.append(body.velocity)
-            kinetic_energies.append(kinetic)
-            potential_energies.append(potential)
-            total_energies.append(kinetic + potential)
-
-        obs.positions.append(positions)
-        obs.velocities.append(velocities)
-        obs.kinetic_energy.append(kinetic_energies)
-        obs.potential_energy.append(potential_energies)
-        obs.total_energy.append(total_energies)
+            obs.positions[current_step, body_index] = body.position
+            obs.velocities[current_step, body_index] = body.velocity
+            obs.kinetic_energy[current_step, body_index] = kinetic
+            obs.potential_energy[current_step, body_index] = potential
+            obs.total_energy[current_step, body_index] = kinetic + potential
 
 
 class EulerCromerIntegrator(BaseIntegrator):
@@ -157,15 +150,14 @@ class LeapFrogIntegrator(BaseIntegrator):
 # %% Simulation
 class Simulation:
 
-    def __init__(self, solar_system: SolarSystem, integrator: BaseIntegrator, number_of_steps_per_frame: int, steps: int, obs: Observables) -> None:
+    def __init__(self, solar_system: SolarSystem, integrator: BaseIntegrator, steps: int, obs: Observables) -> None:
         self.solar_system = solar_system
         self.integrator = integrator
-        self.number_of_steps_per_frame = number_of_steps_per_frame
         self.steps = steps
         self.obs = obs
 
     # Plot the animation of the solar system using matplotlib and the observables
-    def plot_simulation(self) -> None:
+    def run_and_plot_simulation(self) -> None:
         fig = plt.figure()
         size = 1e10
         ax = plt.axes(xlim=(-size, size), ylim=(-size, size))
@@ -186,7 +178,7 @@ class Simulation:
             return lines
 
         def animate(i):
-            self.integrator.integrate(self.solar_system, self.obs)
+            self.integrator.integrate(self.solar_system, self.obs, i)
             for line, body in zip(lines, self.solar_system.bodies):
                 line.set_data(body.position[0], body.position[1])
             return lines
@@ -197,37 +189,35 @@ class Simulation:
         plt.legend()
         plt.show()
 
+    def run_simulation(self) -> None:
+        for i in tqdm.trange(self.steps):
+            self.integrator.integrate(self.solar_system, self.obs, i)
+
+# %% Plot trajectories for all bodies
+
+def plot_trajectories(obs: Observables) -> None:
+    plt.figure()
+    plt.title("Trajectories")
+    plt.xlabel("x [km]")
+    plt.ylabel("y [km]")
+    for i, name in enumerate(obs.names):
+        x = obs.positions[:, i, 0]
+        y = obs.positions[:, i, 1]
+        plt.plot(x, y, label=name)
+    plt.grid()
+    plt.legend()
+    plt.show()
+
 # %% Plot energies for all bodies
 
-def plot_kinetic_energy(obs: Observables) -> None:
+def plot_sum_energies(obs: Observables) -> None:
     plt.figure()
-    plt.title("Kinetic energy")
+    plt.title("Kinetic, Potential and Total Energy")
     plt.xlabel("Time [s]")
-    plt.ylabel("Kinetic energy [J]")
-    for i, name in enumerate(obs.names):
-        plt.plot(obs.time, [l[i] for l in obs.kinetic_energy], label=name, color=obs.colors[i])
-    plt.grid()
-    plt.legend()
-    plt.show()
-
-def plot_potential_energy(obs: Observables) -> None:
-    plt.figure()
-    plt.title("Potential energy")
-    plt.xlabel("Time [s]")
-    plt.ylabel("Potential energy [J]")
-    for i, name in enumerate(obs.names):
-        plt.plot(obs.time, [l[i] for l in obs.potential_energy], label=name, color=obs.colors[i])
-    plt.grid()
-    plt.legend()
-    plt.show()
-
-def plot_total_energy(obs: Observables) -> None:
-    plt.figure()
-    plt.title("Total energy")
-    plt.xlabel("Time [s]")
-    plt.ylabel("Total energy [J]")
-    for i, name in enumerate(obs.names):
-        plt.plot(obs.time, [l[i] for l in obs.total_energy], label=name, color=obs.colors[i])
+    plt.ylabel("Energy [J]")
+    plt.plot(obs.time, np.sum(obs.kinetic_energy, axis=1), label="Kinetic energy", color="red")
+    plt.plot(obs.time, np.sum(obs.potential_energy, axis=1), label="Potential energy", color="blue")
+    plt.plot(obs.time, np.sum(obs.total_energy, axis=1), label="Total energy", color="green")
     plt.grid()
     plt.legend()
     plt.show()
@@ -235,6 +225,7 @@ def plot_total_energy(obs: Observables) -> None:
 # %% Main
 # Run simulation
 start_time = 0
+nsteps = 1000
 
 # Source data: https://nssdc.gsfc.nasa.gov/planetary/factsheet/ (mass, position, velocity)
 bodies = [
@@ -248,12 +239,13 @@ bodies = [
 ]
 
 sys = SolarSystem(bodies, start_time)
-integrator = EulerCromerIntegrator(dt=100_000)
-obs = Observables(sys)
-sim = Simulation(sys, integrator, number_of_steps_per_frame=1, steps=100_000_000, obs=obs)
-sim.plot_simulation()
+integrator = LeapFrogIntegrator(dt=100_000)
+obs = Observables(sys, nsteps)
+sim = Simulation(sys, integrator, steps=nsteps, obs=obs)
+sim.run_simulation()
+
+# Plot trajectories
+plot_trajectories(obs)
 
 # Plot energies
-plot_kinetic_energy(obs)
-plot_potential_energy(obs)
-plot_total_energy(obs)
+plot_sum_energies(obs)
