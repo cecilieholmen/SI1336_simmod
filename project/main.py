@@ -7,14 +7,12 @@
 
 # Imports
 import json
+import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import tqdm
 
 from numpy import ndarray
-from typing import List
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 
 # %% Global constants
 G = 6.6740831 * (10 ** (-20))  # Gravitational constant [km^3 kg^-1 s^-2]
