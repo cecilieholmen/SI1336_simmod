@@ -20,57 +20,41 @@ from abc import abstractmethod, ABC
 G = 6.6740831 * (10 ** (-20))  # Gravitational constant [km^3 kg^-1 s^-2]
 
 # %% Main functions
-class Body:
+class SolarSystem:
 
     def __init__(
         self, 
-        name: str,
-        color: str,
-        mass: float,
-        position: ndarray = np.array([0, 0, 0]),
-        velocity: ndarray = np.array([0, 0, 0]),
-        acceleration: ndarray = np.array([0, 0, 0]),
-        time: float = 0,
+        start_time: float, 
+        names: list, 
+        colors: list, 
+        masses: ndarray,
+        positions: ndarray, 
+        velocities: ndarray, 
+        accelerations: ndarray
     ) -> None:
-        self.name = name
-        self.color = color
-        self.time = time
-        self.mass = mass
-        self.position = position
-        self.velocity = velocity
-        self.acceleration = acceleration
-
-
-class SolarSystem:
-
-    def __init__(self, bodies: List[Body], start_time: float = 0) -> None:
-        self.bodies = bodies
         self.time = start_time
+        self.names = names
+        self.colors = colors
+        self.masses = masses
+        self.positions = positions
+        self.velocities = velocities
+        self.accelerations = accelerations
 
     def forces(self) -> None:
-        for body in self.bodies:
-            acceleration = np.zeros_like(body.acceleration)
-            for other in self.bodies:
-                if body.name == other.name:
-                    continue
-                r = other.position - body.position
-                force = (
-                    G 
-                    * body.mass
-                    * other.mass
-                    / (np.sum(np.square(r)) ** (3 / 2))
-                    * r
-                )
-                acceleration = acceleration + force / body.mass
-            body.acceleration = acceleration
+        """Calculate the forces acting on each body"""
+        dists = self.positions[:, None, :] - self.positions[None, :, :]  # (N, N, 3)
+        r = np.sqrt(np.sum(dists ** 2, axis=-1))  # (N, N)
+        a = G * self.masses[:, None] / (r ** 3)  # (N, N)
+        a = np.where(r == 0, 0, a)  # (N, N)
+        self.accelerations = (a[:, :, None] * dists).sum(axis=0)  # (N, 3)
 
 
 class Observables:
 
     def __init__(self, solar_system: SolarSystem, nsteps: int) -> None:
-        self.names = [body.name for body in solar_system.bodies]  # names
-        self.colors = [body.color for body in solar_system.bodies]  # colors
-        nbodies = len(solar_system.bodies)  # number of bodies
+        self.names = solar_system.names  # names
+        self.colors = solar_system.colors  # colors
+        nbodies = len(solar_system.names)  # number of bodies
         self.time = np.zeros(nsteps)  # array to store time
         self.positions = np.zeros((nsteps, nbodies, 3))  # array to store positions
         self.velocities = np.zeros((nsteps, nbodies, 3))  # array to store velocities
@@ -100,52 +84,49 @@ class BaseIntegrator(ABC):
         solar_system.time += self.dt
         obs.time[current_step] = solar_system.time
 
+        # Append position, velocity, kinetic, potential and total energy observables to their arrays
+        obs.positions[current_step] = solar_system.positions
+        obs.velocities[current_step] = solar_system.velocities
 
+        k = 0.5 * solar_system.masses * np.sum(np.square(solar_system.velocities), axis=1)  # (N)
 
-        for body_index, body in enumerate(solar_system.bodies):
-            kinetic = 0.5 * body.mass * np.sum(np.square(body.velocity))
-            potential = 0
-            for other in solar_system.bodies:
-                if body == other:
-                    continue
-                r = other.position - body.position
-                potential = potential - G * body.mass * other.mass / np.sqrt(np.sum(np.square(r)))
+        dists = solar_system.positions[:, None, :] - solar_system.positions[None, :, :]  # (N, N, 3)
+        r = np.sqrt(np.sum(np.square(dists), axis=-1))  # (N, N)
+        p = -G * solar_system.masses[:, None] * solar_system.masses[None, :] / r  # (N, N)
+        p = np.where(r == 0, 0, p)  # (N, N)
 
-            obs.positions[current_step, body_index] = body.position
-            obs.velocities[current_step, body_index] = body.velocity
-            obs.kinetic_energy[current_step, body_index] = kinetic
-            obs.potential_energy[current_step, body_index] = potential
-            obs.total_energy[current_step, body_index] = kinetic + potential
+        obs.kinetic_energy[current_step] = k
+        obs.potential_energy[current_step] = p.sum(axis=1)
+        obs.total_energy[current_step] = obs.kinetic_energy[current_step] + obs.potential_energy[current_step]
 
 
 class EulerCromerIntegrator(BaseIntegrator):
 
     def timestep(self, solar_system) -> None:
         solar_system.forces()
-        for body in solar_system.bodies:
-            body.velocity = body.velocity + body.acceleration * self.dt
-            body.position = body.position + body.velocity * self.dt
+        solar_system.velocities = solar_system.velocities + solar_system.accelerations * self.dt
+        solar_system.positions = solar_system.positions + solar_system.velocities * self.dt
 
 
 class VelocityVerletIntegrator(BaseIntegrator):
 
     def timestep(self, solar_system) -> None:
         solar_system.forces()
-        for body in solar_system.bodies:
-            acceleration = body.acceleration
-            body.position = body.position + body.velocity * self.dt + 0.5 * body.acceleration * self.dt ** 2
-            body.velocity = body.velocity + 0.5 * (body.acceleration + acceleration) * self.dt
+        accelerations_old = solar_system.accelerations
+        solar_system.positions = solar_system.positions + solar_system.velocities * self.dt + 0.5 * solar_system.accelerations * self.dt ** 2
+        solar_system.forces()
+        solar_system.velocities = solar_system.velocities + 0.5 * (accelerations_old + solar_system.accelerations) * self.dt
 
 
 class LeapFrogIntegrator(BaseIntegrator):
 
     def timestep(self, solar_system) -> None:
         solar_system.forces()
-        for body in solar_system.bodies:
-            body.velocity = body.velocity + body.acceleration * self.dt / 2
-            body.position = body.position + body.velocity * self.dt
-            solar_system.forces()
-            body.velocity = body.velocity + body.acceleration * self.dt / 2
+        solar_system.velocities = solar_system.velocities + solar_system.accelerations * self.dt / 2
+        solar_system.positions = solar_system.positions + solar_system.velocities * self.dt
+        solar_system.forces()
+        solar_system.velocities = solar_system.velocities + solar_system.accelerations * self.dt / 2
+
    
 # %% Simulation
 class Simulation:
@@ -225,21 +206,34 @@ def plot_sum_energies(obs: Observables) -> None:
 # %% Main
 # Run simulation
 start_time = 0
-nsteps = 1000
 
 # Source data: https://nssdc.gsfc.nasa.gov/planetary/factsheet/ (mass, position, velocity)
-bodies = [
-    Body(
-        name=data["name"],
-        color=data["color"],
-        mass=data["mass"],
-        position=np.array(data["position"], dtype=np.float64),
-        velocity=np.array(data["velocity"], dtype=np.float64),
-    ) for data in json.load(open('/Users/cecilie/Desktop/Skrivbord – Cecilies MacBook Air/Universitet/tredje/simmod/project/planet_data.json'))
-]
+dt = 100_000
+nsteps = 10_000
 
-sys = SolarSystem(bodies, start_time)
-integrator = LeapFrogIntegrator(dt=100_000)
+names = []
+colors = []
+masses = []
+positions = []
+velocities = []
+accelerations = []
+
+# get data from .json file
+for planet in json.load(open("planet_data.json")):
+    names.append(planet["name"])
+    colors.append(planet["color"])
+    masses.append(planet["mass"])
+    positions.append(planet["position"])
+    velocities.append(planet["velocity"])
+    accelerations.append(planet["acceleration"])
+
+masses = np.array(masses)
+positions = np.array(positions)
+velocities = np.array(velocities)
+accelerations = np.array(accelerations)
+
+sys = SolarSystem(start_time, names, colors, masses, positions, velocities, accelerations)
+integrator = LeapFrogIntegrator(dt)
 obs = Observables(sys, nsteps)
 sim = Simulation(sys, integrator, steps=nsteps, obs=obs)
 sim.run_simulation()
