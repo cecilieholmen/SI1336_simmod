@@ -40,13 +40,13 @@ class SolarSystem:
         self.velocities = velocities
         self.accelerations = accelerations
 
-    def forces(self) -> None:
+    def update_accelerations(self) -> None:
         """Calculate the forces acting on each body"""
         dists = self.positions[:, None, :] - self.positions[None, :, :]  # (N, N, 3)
         r = np.sqrt(np.sum(dists ** 2, axis=-1))  # (N, N)
         a = G * self.masses[:, None] / (r ** 3)  # (N, N)
         a = np.where(r == 0, 0, a)  # (N, N)
-        self.accelerations = (a[:, :, None] * dists).sum(axis=0)  # (N, 3)
+        self.accelerations = np.sum(a[:, :, None] * dists, axis=0)  # (N, 3)
 
 
 class Observables:
@@ -96,79 +96,46 @@ class BaseIntegrator(ABC):
         p = np.where(r == 0, 0, p)  # (N, N)
 
         obs.kinetic_energy[current_step] = k
-        obs.potential_energy[current_step] = p.sum(axis=1)
+        obs.potential_energy[current_step] = np.sum(p, axis=1)
         obs.total_energy[current_step] = obs.kinetic_energy[current_step] + obs.potential_energy[current_step]
 
 
 class EulerCromerIntegrator(BaseIntegrator):
 
-    def timestep(self, solar_system) -> None:
-        solar_system.forces()
-        solar_system.velocities = solar_system.velocities + solar_system.accelerations * self.dt
-        solar_system.positions = solar_system.positions + solar_system.velocities * self.dt
+    def timestep(self, sys: SolarSystem) -> None:
+        sys.update_accelerations()
+        sys.velocities = sys.velocities + sys.accelerations * self.dt
+        sys.positions = sys.positions + sys.velocities * self.dt
 
 
 class VelocityVerletIntegrator(BaseIntegrator):
 
-    def timestep(self, solar_system) -> None:
-        solar_system.forces()
-        accelerations_old = solar_system.accelerations
-        solar_system.positions = solar_system.positions + solar_system.velocities * self.dt + 0.5 * solar_system.accelerations * self.dt ** 2
-        solar_system.forces()
-        solar_system.velocities = solar_system.velocities + 0.5 * (accelerations_old + solar_system.accelerations) * self.dt
+    def timestep(self, sys: SolarSystem) -> None:
+        sys.update_accelerations()
+        accelerations_old = sys.accelerations
+        sys.positions = sys.positions + sys.velocities * self.dt + 0.5 * sys.accelerations * self.dt ** 2
+        sys.update_accelerations()
+        sys.velocities = sys.velocities + 0.5 * (accelerations_old + sys.accelerations) * self.dt
 
 
 class LeapFrogIntegrator(BaseIntegrator):
 
-    def timestep(self, solar_system) -> None:
-        solar_system.forces()
-        solar_system.velocities = solar_system.velocities + solar_system.accelerations * self.dt / 2
-        solar_system.positions = solar_system.positions + solar_system.velocities * self.dt
-        solar_system.forces()
-        solar_system.velocities = solar_system.velocities + solar_system.accelerations * self.dt / 2
+    def timestep(self, sys: SolarSystem) -> None:
+        sys.update_accelerations()
+        sys.velocities = sys.velocities + sys.accelerations * self.dt / 2
+        sys.positions = sys.positions + sys.velocities * self.dt
+        sys.update_accelerations()
+        sys.velocities = sys.velocities + sys.accelerations * self.dt / 2
 
-   
-# %% Simulation
+  
+# Simulation
 class Simulation:
 
-    def __init__(self, solar_system: SolarSystem, integrator: BaseIntegrator, steps: int, obs: Observables) -> None:
-        self.solar_system = solar_system
+    def __init__(self, sys: SolarSystem, integrator: BaseIntegrator, steps: int, obs: Observables) -> None:
+        self.solar_system = sys
         self.integrator = integrator
         self.steps = steps
         self.obs = obs
-
-    # Plot the animation of the solar system using matplotlib and the observables
-    def run_and_plot_simulation(self) -> None:
-        fig = plt.figure()
-        size = 1e10
-        ax = plt.axes(xlim=(-size, size), ylim=(-size, size))
-        ax.set_aspect("equal")
-        ax.grid()
-        ax.set_xlabel("x [km]")
-        ax.set_ylabel("y [km]")
-        ax.set_title("The solar system")
-
-        lines = []
-        for body in self.solar_system.bodies:
-            line, = ax.plot([], [], "o", color=body.color, label=body.name)
-            lines.append(line)
-
-        def init():
-            for line in lines:
-                line.set_data([], [])
-            return lines
-
-        def animate(i):
-            self.integrator.integrate(self.solar_system, self.obs, i)
-            for line, body in zip(lines, self.solar_system.bodies):
-                line.set_data(body.position[0], body.position[1])
-            return lines
-
-        anim = animation.FuncAnimation(
-            fig, animate, init_func=init, frames=self.steps, interval=1, blit=True, 
-        )
-        plt.legend()
-        plt.show()
 
     def run_simulation(self) -> None:
         for i in tqdm.trange(self.steps):
