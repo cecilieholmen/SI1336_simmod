@@ -1,0 +1,34 @@
+[
+    {
+        "name": "101955 Bennu",
+        "color": "black",
+        "mass": 7.3e10,
+        "position": [15e7, 0, 0],
+        "velocity": [0, 100, 0],
+        "acceleration": [0, 0, 0]
+    },
+    {
+        "name": "433 Eros",
+        "color": "black",
+        "mass": 6.69e15,
+        "position": [15e7, 0, 0],
+        "velocity": [0, 100, 0],
+        "acceleration": [0, 0, 0]
+    },
+    {
+        "name": "1 Ceres",
+        "color": "black",
+        "mass": 939.3e15,
+        "position": [15e7, 0, 0],
+        "velocity": [0, 100, 0],
+        "acceleration": [0, 0, 0]
+    },
+    {
+        "name": "1862 Apollo",
+        "color": "black",
+        "mass": 0.002e15,
+        "position": [15e7, 0, 0],
+        "velocity": [0, 100, 0],
+        "acceleration": [0, 0, 0]
+    }
+]
