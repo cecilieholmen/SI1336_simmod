@@ -1,4 +1,4 @@
-# %% Project SimMod
+# Project SimMod
 #
 # Simulate our solar system, add an asteroid and make it pass very close
 # (such that it’s direction changes significantly) by a planet, you can also
@@ -6,7 +6,6 @@
 # how much the trajectories of the planets and asteroid change.
 
 # Imports
-import json
 import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,10 +13,10 @@ import matplotlib.pyplot as plt
 from numpy import ndarray
 from abc import ABC, abstractmethod
 
-# %% Global constants
+# Global constants
 G = 6.6740831 * (10 ** (-20))  # Gravitational constant [km^3 kg^-1 s^-2]
 
-# %% Main functions
+# Main functions
 class SolarSystem:
 
     def __init__(
@@ -37,13 +36,14 @@ class SolarSystem:
         self.positions = positions
         self.velocities = velocities
         self.accelerations = accelerations
-
+    
     def update_accelerations(self) -> None:
         """Calculate the forces acting on each body"""
         dists = self.positions[:, None, :] - self.positions[None, :, :]  # (N, N, 3)
         r = np.sqrt(np.sum(dists ** 2, axis=-1))  # (N, N)
+        r = r - np.identity(r.shape[0])
         a = G * self.masses[:, None] / (r ** 3)  # (N, N)
-        a = np.where(r == 0, 0, a)  # (N, N)
+        a = np.where(r == -1, 0, a)  # (N, N)
         self.accelerations = np.sum(a[:, :, None] * dists, axis=0)  # (N, 3)
 
 
@@ -61,7 +61,7 @@ class Observables:
         self.total_energy = np.zeros((nsteps, nbodies))  # array to store total energies
 
 
-# %% Integrators
+# Integrators
 class BaseIntegrator(ABC):
 
     def __init__(self, dt: float=0.01):
@@ -90,8 +90,9 @@ class BaseIntegrator(ABC):
 
         dists = solar_system.positions[:, None, :] - solar_system.positions[None, :, :]  # (N, N, 3)
         r = np.sqrt(np.sum(np.square(dists), axis=-1))  # (N, N)
+        r = r - np.identity(r.shape[0])
         p = -G * solar_system.masses[:, None] * solar_system.masses[None, :] / r  # (N, N)
-        p = np.where(r == 0, 0, p)  # (N, N)
+        p = np.where(r == -1, 0, p)  # (N, N)
 
         obs.kinetic_energy[current_step] = k
         obs.potential_energy[current_step] = np.sum(p, axis=1)
@@ -139,8 +140,7 @@ class Simulation:
         for i in tqdm.trange(self.steps):
             self.integrator.integrate(self.solar_system, self.obs, i)
 
-# %% Plot trajectories for all bodies
-
+# Plot trajectories for all bodies
 def plot_trajectories(obs: Observables) -> None:
     plt.figure()
     plt.title("Trajectories")
@@ -149,13 +149,12 @@ def plot_trajectories(obs: Observables) -> None:
     for i, name in enumerate(obs.names):
         x = obs.positions[:, i, 0]
         y = obs.positions[:, i, 1]
-        plt.plot(x, y, label=name)
+        plt.plot(x, y, label=name, color=obs.colors[i])
     plt.grid()
     plt.legend()
     plt.show()
 
-# %% Plot energies for all bodies
-
+# Plot energies for all bodies
 def plot_sum_energies(obs: Observables) -> None:
     plt.figure()
     plt.title("Kinetic, Potential and Total Energy")
@@ -168,43 +167,17 @@ def plot_sum_energies(obs: Observables) -> None:
     plt.legend()
     plt.show()
 
-# %% Main
-# Run simulation
-start_time = 0
+# Calculate the error
+def calculate_error(obs: Observables) -> None:
+    return np.abs(np.max(np.sum(obs.total_energy, axis=1)) - np.min(np.sum(obs.total_energy, axis=1)) / 2)
 
-# Source data: https://nssdc.gsfc.nasa.gov/planetary/factsheet/ (mass, position, velocity)
-dt = 100_000
-nsteps = 10_000
-
-names = []
-colors = []
-masses = []
-positions = []
-velocities = []
-accelerations = []
-
-# get data from .json file
-for planet in json.load(open("planet_data.json")):
-    names.append(planet["name"])
-    colors.append(planet["color"])
-    masses.append(planet["mass"])
-    positions.append(planet["position"])
-    velocities.append(planet["velocity"])
-    accelerations.append(planet["acceleration"])
-
-masses = np.array(masses)
-positions = np.array(positions)
-velocities = np.array(velocities)
-accelerations = np.array(accelerations)
-
-sys = SolarSystem(start_time, names, colors, masses, positions, velocities, accelerations)
-integrator = LeapFrogIntegrator(dt)
-obs = Observables(sys, nsteps)
-sim = Simulation(sys, integrator, steps=nsteps, obs=obs)
-sim.run_simulation()
-
-# Plot trajectories
-plot_trajectories(obs)
-
-# Plot energies
-plot_sum_energies(obs)
+# Calculate the error of the simulation
+def calculate_error_plot(obs: Observables) -> None:
+    plt.figure()
+    plt.title("Error")
+    plt.xlabel("Time [s]")
+    plt.ylabel("Error")
+    plt.plot(obs.time, np.abs(np.max(obs.total_energy, axis=1) - np.min(obs.total_energy, axis=1) / 2), label="Error", color="green")
+    plt.grid()
+    plt.legend()
+    plt.show()
