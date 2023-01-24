@@ -3,32 +3,40 @@
         "name": "101955 Bennu",
         "color": "black",
         "mass": 7.3e10,
-        "position": [15e7, 0, 0],
-        "velocity": [0, 100, 0],
+        "position": [149598262, -384400, 0],
+        "velocity": [0, 29.8, 0],
         "acceleration": [0, 0, 0]
     },
     {
         "name": "433 Eros",
         "color": "black",
         "mass": 6.69e15,
-        "position": [15e7, 0, 0],
-        "velocity": [0, 100, 0],
+        "position": [149598262, -384400, 0],
+        "velocity": [0, 29.8, 0],
         "acceleration": [0, 0, 0]
     },
     {
         "name": "1 Ceres",
         "color": "black",
         "mass": 939.3e15,
-        "position": [15e7, 0, 0],
-        "velocity": [0, 100, 0],
+        "position": [149598262, -384400, 0],
+        "velocity": [0, 29.8, 0],
         "acceleration": [0, 0, 0]
     },
     {
         "name": "1862 Apollo",
         "color": "black",
         "mass": 0.002e15,
-        "position": [15e7, 0, 0],
-        "velocity": [0, 100, 0],
+        "position": [149598262, -384400, 0],
+        "velocity": [0, 29.8, 0],
+        "acceleration": [0, 0, 0]
+    }, 
+    {
+        "name": "Earthlike asteroid",
+        "color": "black",
+        "mass": 5.97e24,
+        "position": [149598262, -384400, 0],
+        "velocity": [0, 29.8, 0],
         "acceleration": [0, 0, 0]
     }
 ]
