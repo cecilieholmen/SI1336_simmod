@@ -76,7 +76,7 @@ plt.show()
 
 # %%
 start_time = 0
-nsteps = 10_000
+nsteps = 100_000
 dt = 1
 
 sys = SolarSystem(start_time, names, colors, masses, positions, velocities, accelerations)
