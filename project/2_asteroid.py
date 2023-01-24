@@ -13,8 +13,8 @@ from main import (
 )
 
 start_time = 0
-dt = 50_000
-nsteps = 100_000
+dt = 1
+nsteps = 86_400
 integrator = VelocityVerletIntegrator(dt)
 
 names = []
@@ -50,9 +50,10 @@ names_asteroids = []
 colors_asteroids = []
 masses_asteroids = []
 positions_asteroids = []
-velocities_asteroids = [velocity for velocity in range(200, 600, 100)]
+velocities_asteroids = [velocity for velocity in range(2, 11, 2)]
 accelerations_asteroids = []
 
+displacement = []
 error = []
 
 # get asteroid data from .json file
@@ -66,13 +67,14 @@ for asteroid in asteroid:
     accelerations_asteroids.append(asteroid["acceleration"])
 
 for i in range(len(names_asteroids)):
+    displacement_earth = []
     error_asteroid = []
     for velocity in velocities_asteroids:
         names_solarsystem = names + [names_asteroids[i]]
         colors_solarsystem = colors + [colors_asteroids[i]]
         masses_solar_system = masses + [masses_asteroids[i]]
         positions_solarsystem = positions + [positions_asteroids[i]]
-        velocities_solarsystem = velocities + [[0, velocity, 0]]
+        velocities_solarsystem = velocities + [[velocity, 0, 0]]
         accelerations_solarsystem = accelerations + [accelerations_asteroids[i]]
 
         masses_solar_system = np.array(masses_solar_system)
@@ -86,40 +88,42 @@ for i in range(len(names_asteroids)):
         sim_with_asteroid.run_simulation()
 
         # Plot difference between energies
-        plot_sum_energies(obs_with_asteroid)
+        #plot_sum_energies(obs_with_asteroid)
 
         # Calculate error
         error_asteroid.append(calculate_error(obs_with_asteroid))
 
         # Plot difference between trajectories
-        #obs_with_asteroid.positions[:, :9] = obs_with_asteroid.positions[:, :9] - obs_without_asteroid.positions
-        plot_trajectories(obs_with_asteroid)
-        break
-    break
+        obs_with_asteroid.positions[:, :9] = (obs_with_asteroid.positions[:, :9] - obs_without_asteroid.positions) + obs_with_asteroid.positions[0, :9]
+        obs_with_asteroid.positions[:, 0:3] = np.zeros((nsteps, 3, 3))
+        obs_with_asteroid.positions[:, 4:9] = np.zeros((nsteps, 5, 3))
+        #plot_trajectories(obs_with_asteroid)
 
+        # Calculate displacement
+        displacement_earth.append(np.sqrt(np.sum(np.square(obs_with_asteroid.positions[-1, 3] - obs_with_asteroid.positions[0, 3]))))
+
+    displacement.append(displacement_earth)
     error.append(error_asteroid)
 
 # %%
-obs = obs_with_asteroid
-plt.figure()
-plt.title("Trajectories")
-plt.xlabel("x [km]")
-plt.ylabel("y [km]")
-for i, name in enumerate(obs.names):
-    x = obs.positions[:, i, 0]
-    y = obs.positions[:, i, 1]
-    plt.plot(x, y, label=name, color=obs.colors[i])
-plt.grid()
-plt.xlim(-1e9, 1e9)
-plt.ylim(-1e9, 1e9)
-plt.legend()
-
-# %%
-# Plot error
+# Plot displacement
 plt.figure()
 for i in range(len(names_asteroids)):
-    plt.plot(velocities_asteroids, error[i], label=names_asteroids[i])
-plt.xlabel("Velocity [m/s]")
-plt.ylabel("Error")
+    plt.plot(velocities_asteroids, displacement[i], label=names_asteroids[i], marker="x")
+plt.xlabel("Velocity [km/s]")
+plt.ylabel("Displacement [km]")
 plt.legend()
+plt.grid()
+plt.savefig("displacement.png")
 plt.show()
+
+# %%
+# # Plot error
+# plt.figure()
+# for i in range(len(names_asteroids)):
+#     plt.plot(velocities_asteroids, error[i], label=names_asteroids[i])
+# plt.xlabel("Velocity [km/s]")
+# plt.ylabel("Error")
+# plt.legend()
+# plt.grid()
+# plt.show()
